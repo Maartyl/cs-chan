@@ -12,6 +12,14 @@ namespace Channels
   /// </summary>
   //TODO: possible improvement: use BlockingCollection over ConcurentQueue Q : takes care of waiters logic
   // - also provides bounding: qlimit (... it really goes hand in hand...)
+  //the order is: promises -> Q -> waiters
+  //~Proven parts:
+  //Order always correct if: receiver waits for sender (no matter how many receivers: in order of calling receiveAsync)
+  //Order always correct if: all fits into queue (no waiting)
+  //Cannot have both promise and queue items if: only 1 in, only 1 out
+  // - that is currently only thing to possibly cause wrong order
+  // - happens very rarely: probably just puting a lock around it is good enough
+  // -- sadly: lock probably also needed around something common...
   public class ChanQueued<TMsg> : Chan<TMsg> {
     readonly ConcurrentQueue<TMsg> Q = new ConcurrentQueue<TMsg>();
     readonly ConcurrentQueue<TaskCompletionSource<TMsg>> promises = new ConcurrentQueue<TaskCompletionSource<TMsg>>();
@@ -43,17 +51,18 @@ namespace Channels
 
       if (Q.TryDequeue(out msg)) {
         rslt = Task.FromResult(msg);
+        tryEnqueueWaiting(); //made room
       } else {//nothing ready
-        tryEnqueueWaiting();
-        if (Q.TryDequeue(out msg)) {
-          rslt = Task.FromResult(msg);
-        } else {//only promise
-          var tcs = new TaskCompletionSource<TMsg>();
-          promises.Enqueue(tcs);
-          rslt = tcs.Task;
-        }
+//        tryEnqueueWaiting();
+//        if (Q.TryDequeue(out msg)) {
+//          rslt = Task.FromResult(msg);
+//        } else {//only promise
+        var tcs = new TaskCompletionSource<TMsg>();
+        promises.Enqueue(tcs);
+        rslt = tcs.Task;
+//        }
       }
-      tryEnqueueWaiting();
+
       return rslt;
     }
 
