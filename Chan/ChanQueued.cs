@@ -7,10 +7,15 @@ namespace Channels
 {
   /// <summary>
   /// All messages pass through concurrent queue...
+  /// Order is guaranteed if only 1 receiveAsync is waited for at a time
+  /// (actually maybe not really: not everything necessarily uses promise queue...)
   /// </summary>
+  //TODO: possible improvement: use BlockingCollection over ConcurentQueue Q : takes care of waiters logic
+  // - also provides bounding: qlimit (... it really goes hand in hand...)
   public class ChanQueued<TMsg> : Chan<TMsg> {
     readonly ConcurrentQueue<TMsg> Q = new ConcurrentQueue<TMsg>();
     readonly ConcurrentQueue<TaskCompletionSource<TMsg>> promises = new ConcurrentQueue<TaskCompletionSource<TMsg>>();
+    //there cannot be too many waiters: bound by number of threads
     readonly ConcurrentQueue<ManualResetEventSlim> waiters = new ConcurrentQueue<ManualResetEventSlim>();
     //blocked threads: queue soft limit : it is possible to be a little bit bigger
     readonly int qlimit;
@@ -53,17 +58,25 @@ namespace Channels
     }
 
     protected override Task SendAsyncImpl(TMsg msg) {
-      if (Q.Count < qlimit) {
+      TaskCompletionSource<TMsg> p;
+      //try: deliver promise right away if possible
+      if (promises.TryDequeue(out p)) { 
+        p.SetResult(msg);
+        return Task.WhenAll(); //completed task
+      } 
+
+      if (Q.Count < qlimit) {//has room to queue msg
         Q.Enqueue(msg);
         tryDeliverToPromises();
         return Task.WhenAll(); //completed task
-      } else {
-        //block thread
-        var mre = new ManualResetEventSlim();
-        waiters.Enqueue(mre);
-        mre.Wait();
-        return SendAsyncImpl(msg);
-      }
+      } 
+
+      //block thread
+      var mre = new ManualResetEventSlim();
+      waiters.Enqueue(mre);
+      mre.Wait();
+      mre.Dispose();
+      return SendAsyncImpl(msg);//recur
     }
 
     void tryEnqueueWaiting() {
@@ -71,7 +84,6 @@ namespace Channels
         ManualResetEventSlim mre;
         if (waiters.TryDequeue(out mre)) {
           mre.Set();
-          mre.Dispose();
         } else
           return;
       }
@@ -96,13 +108,20 @@ namespace Channels
       }
     }
 
-    public override void Close() {
-      base.Close();
+    public override async Task Close() {
+      await base.Close();
       //push rest of waiters and fill promises
       //!!! promises that cennot be delivered must be cancelled
+      tryEnqueueWaiting();
+      tryDeliverToPromises();
+      await Task.Delay(5); //everything should calm down after a little while
+//      if (!waiters.IsEmpty) {
+//        var wut = "wut";
+//      }
+
     }
 
-    protected override bool NoRemainingMessagesAfterClosed() {
+    protected override bool NoMessagesLeft() {
       return Q.IsEmpty && waiters.IsEmpty;
     }
   }

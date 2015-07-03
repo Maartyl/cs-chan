@@ -36,6 +36,7 @@ namespace Channels
         }
       } catch (TaskCanceledException ex) {
         //over
+        Console.Error.WriteLine("listen over; " + typeof(TMsg).Name);
       }
 
     }

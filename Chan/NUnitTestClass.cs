@@ -20,8 +20,7 @@ namespace Channels
       Action k = async () => rslt = await x;
       k();
       Parallel.Invoke(a, a, a, a, a, a, a, a, a, a);
-      cs.Close();
-      x.Wait();
+      Task.WaitAll(cs.Close(), x);
       Assert.AreEqual(4995000, rslt);
     }
 
@@ -35,6 +34,7 @@ namespace Channels
           var ra1 = cs.ReceiveAsync();
           var ra2 = cs.ReceiveAsync();
           sum += await ra1;
+          //await Task.Delay(1);
           sum += await ra2;
           //Console.WriteLine("sum step: " + sum + " (i: " + i + "/" + count + ")");
         }
@@ -43,6 +43,30 @@ namespace Channels
       }
       Console.WriteLine("sum over");
       return sum;
+    }
+
+    [Test()]
+    public void OrderWithSingleInAndOut() {
+      var cs = new ChanQueued<int>();
+
+      Action a = async () => {
+        for (int i = -500; i < 50000; ++i)
+          await cs.SendAsync(i);
+      };
+      Action b = async () => {
+        int prev;
+        int cur = int.MinValue;
+        try {
+          while (true) {
+            prev = cur;
+            cur = await cs.ReceiveAsync();
+            Assert.GreaterOrEqual(cur, prev);
+          }
+        } catch (TaskCanceledException) {
+          
+        }
+      };
+      Parallel.Invoke(a, b);
     }
   }
 }

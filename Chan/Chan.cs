@@ -12,14 +12,15 @@ namespace Channels
       Closed = false;
     }
 
-    public virtual void Close() {
+    public virtual async Task Close() {
       Closed = true;
     }
 
-    protected abstract bool NoRemainingMessagesAfterClosed();
+    ///after Closing channel: returns if all messages have been "received"
+    protected abstract bool NoMessagesLeft();
 
     public Task<TMsg> ReceiveAsync() {
-      if (Closed && NoRemainingMessagesAfterClosed())
+      if (Closed && NoMessagesLeft())
         return CancelledTask;
       return ReceiveAsyncImpl();
     }

@@ -5,8 +5,9 @@ namespace Channels
 {
   class MainClass {
     public static void Main(string[] args) {
-
-      new ChanSimpleTest().AllPassed();
+      var test = new ChanSimpleTest();
+      test.AllPassed();
+      test.OrderWithSingleInAndOut();
 
       var cs = new ChanQueued<String>();
       new ChanEvent<String>(cs, Console.WriteLine);
@@ -21,8 +22,12 @@ namespace Channels
       string s;
       while ((s = Console.ReadLine()) != null)
         await cs.SendAsync(s);
-      cs.Close();
-      await cs.SendAsync("this should not be shown");
+      await cs.Close();
+      try {
+        await cs.SendAsync("this should not be shown");
+      } catch (TaskCanceledException) {
+        Console.WriteLine("correctly thrown cancelled");
+      }
     }
   }
 }

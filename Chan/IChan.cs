@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Channels
 {
   public interface IChan<TMsg> {
-    void Close();
+    Task Close();
   }
 
   public interface IChanSender<TMsg> : IChan<TMsg> {
