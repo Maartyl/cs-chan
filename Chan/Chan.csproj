@@ -41,9 +41,8 @@
     <Compile Include="IChan.cs" />
     <Compile Include="ChanEvent.cs" />
     <Compile Include="Chan.cs" />
-    <Compile Include="ChanSimple.cs" />
     <Compile Include="NUnitTestClass.cs" />
-    <Compile Include="TaskHelpers.cs" />
+    <Compile Include="ChanQueued.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

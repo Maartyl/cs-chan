@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using System;
 
-namespace Chan
+namespace Channels
 {
   public static class TaskHelpers {
     private static Task cancelledTask;

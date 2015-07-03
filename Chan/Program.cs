@@ -1,14 +1,14 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Chan
+namespace Channels
 {
   class MainClass {
     public static void Main(string[] args) {
 
       new ChanSimpleTest().AllPassed();
 
-      var cs = new ChanSimple<String>();
+      var cs = new ChanQueued<String>();
       new ChanEvent<String>(cs, Console.WriteLine);
 
       exec(cs).Wait();
@@ -21,6 +21,8 @@ namespace Chan
       string s;
       while ((s = Console.ReadLine()) != null)
         await cs.SendAsync(s);
+      cs.Close();
+      await cs.SendAsync("this should not be shown");
     }
   }
 }

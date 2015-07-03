@@ -2,32 +2,30 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
-namespace Chan
+namespace Channels
 {
   //this partially handles closing of channel, not synchronization
   public abstract class Chan<TMsg> : IChanBoth<TMsg> {
     protected bool Closed { get; private set; }
 
-    protected readonly ConcurrentQueue<TMsg> Q = new ConcurrentQueue<TMsg>();
-
     protected Chan() {
       Closed = false;
     }
-    #region IChan implementation
-    public void Close() {
+
+    public virtual void Close() {
       Closed = true;
     }
-    #endregion
-    #region IChanReceiver implementation
+
+    protected abstract bool NoRemainingMessagesAfterClosed();
+
     public Task<TMsg> ReceiveAsync() {
-      if (Closed && Q.IsEmpty)
+      if (Closed && NoRemainingMessagesAfterClosed())
         return CancelledTask;
       return ReceiveAsyncImpl();
     }
 
     protected abstract Task<TMsg> ReceiveAsyncImpl();
-    #endregion
-    #region IChanSender implementation
+
     public Task SendAsync(TMsg msg) {
       if (Closed)
         return CancelledTask;
@@ -35,7 +33,7 @@ namespace Chan
     }
 
     protected abstract Task SendAsyncImpl(TMsg msg);
-    #endregion
+
     protected readonly static Task<TMsg> CancelledTask;
 
     static Chan() {

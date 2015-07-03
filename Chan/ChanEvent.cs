@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Chan
+namespace Channels
 {
   //consumes channel, invoking event for each message
   //This is the only way to assure that everyone will erceive everything
@@ -27,12 +27,17 @@ namespace Chan
     }
 
     async void startListening() {
-      TMsg msg;
-      while ((msg = await chan.ReceiveAsync()) != null) {      
-//        Action<TMsg> a = ReceivedMessage;
-//        await Task.Factory.FromAsync(a.BeginInvoke(msg), a.EndInvoke); //TODO: simulateously receive and invoke
-        ReceivedMessage(msg);
+      //TMsg msg;
+      try {
+        while (true) {      
+          //        Action<TMsg> a = ReceivedMessage;
+          //        await Task.Factory.FromAsync(a.BeginInvoke(msg), a.EndInvoke); //TODO: simulateously receive and invoke
+          ReceivedMessage(await chan.ReceiveAsync());
+        }
+      } catch (TaskCanceledException ex) {
+        //over
       }
+
     }
   }
 }
