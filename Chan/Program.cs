@@ -3,11 +3,14 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
-  class MainClass {
+  public class MainClass {
     public static void Main(string[] args) {
+
       var test = new ChanSimpleTest();
       //test.AllPassed();
-      test.OrderWithSingleInAndOut();
+      test.OrderWithSingleInAndOutBlocking();
+      test.OrderWithSingleInAndOutBuffered();
+      test.OrderWithSingleInAndOutQueued();
 
       var cs = new ChanQueued<String>();
       new ChanEvent<String>(cs, Console.WriteLine);

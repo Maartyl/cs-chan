@@ -17,8 +17,10 @@ namespace Chan
     protected override Task<TMsg> ReceiveAsyncImpl() {
       DeliverBarrier<TMsg> mse;
       if (waiters.TryDequeue(out mse)) {
+        DebugCounter.Incg(this, "r1");
         return Task.FromResult(mse.Deliver());
       } else {
+        DebugCounter.Incg(this, "r2");
         var tcs = new TaskCompletionSource<TMsg>();
         promises.Enqueue(tcs);
         return tcs.Task;
@@ -27,10 +29,13 @@ namespace Chan
 
     protected override Task SendAsyncImpl(TMsg msg) {
       TaskCompletionSource<TMsg> tcs;
-      if (promises.TryDequeue(out tcs)) 
+      if (promises.TryDequeue(out tcs)) {
+        DebugCounter.Incg(this, "s1");
         tcs.SetResult(msg);
-      else
+      } else {
+        DebugCounter.Incg(this, "s2");
         sleep(msg);
+      }
       return Task.Delay(0);
     }
 

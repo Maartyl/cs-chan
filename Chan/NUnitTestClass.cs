@@ -58,12 +58,27 @@ namespace Chan
     }
 
     [Test()]
-    public void OrderWithSingleInAndOut() {
-      var cs = new ChanQueued<int>();
+    public void OrderWithSingleInAndOutQueued() {
+      OrderWithSingleInAndOut(new ChanQueued<int>());
+    }
+
+    [Test()]
+    public void OrderWithSingleInAndOutBuffered() {
+      OrderWithSingleInAndOut(new ChanQueued<int>(500));
+    }
+
+    [Test()]
+    public void OrderWithSingleInAndOutBlocking() {
+      OrderWithSingleInAndOut(new ChanBlocking<int>());
+    }
+
+    public void OrderWithSingleInAndOut(Chan<int> chan) {
+      //this is needed: tests work correctly otherwise... this initialzes thread pool or something...
+      Parallel.Invoke(Task.Delay(4).Wait, Task.Delay(3).Wait, Task.Delay(5).Wait);
 
       Action a = async () => {
         for (int i = -500; i < 50000; ++i)
-          await cs.SendAsync(i);
+          await chan.SendAsync(i);
       };
       Action b = async () => {
         int prev;
@@ -71,14 +86,15 @@ namespace Chan
         try {
           while (true) {
             prev = cur;
-            cur = await cs.ReceiveAsync();
-            Assert.GreaterOrEqual(cur, prev);
+            cur = await chan.ReceiveAsync();
+            if (cur < prev)
+              Assert.GreaterOrEqual(cur, prev);
           }
         } catch (TaskCanceledException) {
-          
+
         }
       };
-      Parallel.Invoke(a, b);
+      Parallel.Invoke(b, a);
     }
   }
 }
