@@ -13,7 +13,8 @@ namespace UnixDbg
       Thread signalThread = new Thread(() => {
         while (true) {
           //returns index to the passed array
-          int index = UnixSignal.WaitAny(signalsUsr1, -1);
+          /*int index =*/
+          UnixSignal.WaitAny(signalsUsr1, -1);
           action();
         }
       });

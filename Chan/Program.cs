@@ -14,7 +14,7 @@ namespace Chan
 
       var cs = new ChanQueued<String>();
       new ChanEvent<String>(cs, Console.WriteLine);
-
+      DebugCounter.Glob.Print(Console.Error);
       exec(cs).Wait();
     }
 

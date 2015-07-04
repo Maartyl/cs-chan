@@ -22,7 +22,7 @@ namespace Chan
         lock (data) 
           if (!data.TryGetValue(obj, out objData)) 
             data[obj] = new Dictionary<string, int>();
-        Incg(obj, prop);
+        Inc(obj, prop);
       }
     }
 
@@ -42,6 +42,7 @@ namespace Chan
     }
 
     public void Print(TextWriter w) {
+      w.WriteLine("---");
       lock (data) {
         foreach (var kv in data) {
           w.WriteLine(kv.Key + ":");
@@ -49,6 +50,18 @@ namespace Chan
             w.WriteLine("\t" + pv.Key + ": " + pv.Value);
         }
       }
+    }
+
+    public void Clear() {
+      lock (data)
+        data.Clear();
+    }
+
+    public void Clear(string obj) {
+      Dictionary<string, int> objData;
+      if (data.TryGetValue(obj, out objData)) 
+        lock (objData)
+          objData.Clear(); 
     }
 
     public static DebugCounter Glob = new DebugCounter();

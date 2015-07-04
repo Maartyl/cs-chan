@@ -16,31 +16,55 @@ namespace Chan
 
     protected override Task<TMsg> ReceiveAsyncImpl() {
       DeliverBarrier<TMsg> mse;
+      lock (waiters) 
+        if (waiters.TryDequeue(out mse)) {
+          DebugCounter.Incg(this, "r.w");
+          return Task.FromResult(mse.Deliver());
+        } else {
+          DebugCounter.Incg(this, "r.p");
+          var tcs = new TaskCompletionSource<TMsg>();
+          promises.Enqueue(tcs);
+          return tcs.Task;
+        }
+    }
+
+    protected override Task<TMsg> ReceiveAsyncCancelled(Task<TMsg> cancelled) {
+      DeliverBarrier<TMsg> mse;
       if (waiters.TryDequeue(out mse)) {
-        DebugCounter.Incg(this, "r1");
+        DebugCounter.Incg(this, "c.w");
         return Task.FromResult(mse.Deliver());
       } else {
-        DebugCounter.Incg(this, "r2");
-        var tcs = new TaskCompletionSource<TMsg>();
-        promises.Enqueue(tcs);
-        return tcs.Task;
+        DebugCounter.Incg(this, "c.c");
+        return cancelled;
       }
     }
 
     protected override Task SendAsyncImpl(TMsg msg) {
       TaskCompletionSource<TMsg> tcs;
-      if (promises.TryDequeue(out tcs)) {
-        DebugCounter.Incg(this, "s1");
-        tcs.SetResult(msg);
-      } else {
-        DebugCounter.Incg(this, "s2");
-        sleep(msg);
-      }
+      DeliverBarrier<TMsg> db;
+      lock (waiters) 
+        if (promises.TryDequeue(out tcs)) {
+          DebugCounter.Incg(this, "s.p");
+          tcs.SetResult(msg);
+          return Task.Delay(0);
+        } else {
+          DebugCounter.Incg(this, "s.w");
+          db = DeliverBarrier.Create(msg);
+          waiters.Enqueue(db);
+        }
+      db.WaitAndDispose();
       return Task.Delay(0);
     }
 
-    void sleep(TMsg msg) {
-      DeliverBarrier.Start(msg, waiters.Enqueue);
+    protected override async Task CloseImpl() {
+      DebugCounter.Incg(this, "closing.start");
+
+      while (!waiters.IsEmpty)
+        await Task.Delay(5);
+      DebugCounter.Incg(this, "closed");
+      TaskCompletionSource<TMsg> tcs;
+      while (promises.TryDequeue(out tcs))
+        tcs.SetCanceled();
     }
 
     protected override bool NoMessagesLeft() {

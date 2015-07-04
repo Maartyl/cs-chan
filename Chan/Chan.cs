@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace Chan
 {
@@ -10,13 +9,15 @@ namespace Chan
     //wraps result of first call to CloseImpl
     volatile TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
 
-    protected bool Closed { get { return closed; } }
+    public bool Closed { get { return closed; } }
 
     public virtual async Task Close() {
-      if (!closed) {
-        closed = true;
-        closingTaskPromise.SetResult(CloseImpl());
-      }
+      if (!closed)
+        lock (closingTaskPromise)
+          if (!closed) {
+            closed = true;
+            closingTaskPromise.SetResult(CloseImpl());
+          }
       await await closingTaskPromise.Task;
     }
 

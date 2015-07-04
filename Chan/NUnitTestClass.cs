@@ -76,25 +76,33 @@ namespace Chan
       //this is needed: tests work correctly otherwise... this initialzes thread pool or something...
       Parallel.Invoke(Task.Delay(4).Wait, Task.Delay(3).Wait, Task.Delay(5).Wait);
 
-      Action a = async () => {
+      Func<Task> af = async () => {
         for (int i = -500; i < 50000; ++i)
           await chan.SendAsync(i);
+        DebugCounter.Incg("test.order", "all sent");
+        await chan.Close();
       };
-      Action b = async () => {
+      Func<Task> bf = async () => {
         int prev;
         int cur = int.MinValue;
         try {
           while (true) {
+            //Console.Error.WriteLine("" + chan.GetHashCode() + cur);
             prev = cur;
             cur = await chan.ReceiveAsync();
             if (cur < prev)
               Assert.GreaterOrEqual(cur, prev);
           }
         } catch (TaskCanceledException) {
-
+          DebugCounter.Incg("test.order", "cancelled");
         }
       };
+      Task at = null;
+      Task bt = null;
+      Action a = () => at = af();
+      Action b = () => bt = bf();
       Parallel.Invoke(b, a);
+      Task.WaitAll(at, bt);
     }
   }
 }

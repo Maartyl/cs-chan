@@ -55,6 +55,7 @@ namespace Chan
       if (Q.TryDequeue(out msg)) {
         rslt = Task.FromResult(msg);
         tryEnqueueWaiting(); //made room
+        DebugCounter.Incg(this, "r.q");
       } else {//nothing ready
 //        tryEnqueueWaiting();
 //        if (Q.TryDequeue(out msg)) {
@@ -63,7 +64,27 @@ namespace Chan
         var tcs = new TaskCompletionSource<TMsg>();
         promises.Enqueue(tcs);
         rslt = tcs.Task;
+        DebugCounter.Incg(this, "r.p");
 //        }
+      }
+
+      return rslt;
+    }
+
+    protected override Task<TMsg> ReceiveAsyncCancelled(Task<TMsg> cancelled) {
+      Task<TMsg> rslt;
+      TMsg msg;
+
+      if (Q.TryDequeue(out msg)) {
+        rslt = Task.FromResult(msg);
+        DebugCounter.Incg(this, "c.q");
+        tryEnqueueWaiting(); //made room
+      } else {//nothing ready
+        DebugCounter.Incg(this, "c.e");
+        if (waiters.IsEmpty)
+          return cancelled;
+        tryEnqueueWaiting();
+        return ReceiveAsyncCancelled(cancelled);
       }
 
       return rslt;
@@ -74,15 +95,17 @@ namespace Chan
       //try: deliver promise right away if possible
       if (promises.TryDequeue(out p)) { 
         p.SetResult(msg);
+        DebugCounter.Incg(this, "s.p");
         return Task.Delay(0); //completed task
       } 
 
       if (Q.Count < qlimit) {//has room to queue msg
         Q.Enqueue(msg);
+        DebugCounter.Incg(this, "s.q");
         tryDeliverToPromises();
         return Task.Delay(0); //completed task
       } 
-
+      DebugCounter.Incg(this, "s.w");
       //block thread
       var mre = new ManualResetEventSlim();
       waiters.Enqueue(mre);
@@ -95,6 +118,7 @@ namespace Chan
       while (Q.Count < qlimit) {
         ManualResetEventSlim mre;
         if (waiters.TryDequeue(out mre)) {
+          DebugCounter.Incg(this, "enqueue.w");
           mre.Set();
         } else
           return;
@@ -107,10 +131,12 @@ namespace Chan
         if (promises.TryDequeue(out p)) {
           TMsg msg;
           if (Q.TryDequeue(out msg)) {
+            DebugCounter.Incg(this, "deliver");
             p.SetResult(msg);
           } else {
             //DANGER: I dequeued promise, but cannot deliver: re-enqueue
             //this changes order, but without prepending, there's no better option (only absolutely crazy)
+            DebugCounter.Incg(this, "wrong-order");
             promises.Enqueue(p);
             return;
           }
@@ -124,17 +150,20 @@ namespace Chan
     /// Completes when remaining receiveTasks (promises) are either delivered or canceled
     /// </summary>
     protected override async Task CloseImpl() {
+      DebugCounter.Incg(this, "closing.start");
       //push rest of waiters and fill promises
       //!!! promises that cennot be delivered must be cancelled
       tryEnqueueWaiting();
       tryDeliverToPromises();
       int delayTime = 5;
 
-      if (waiters.Count < 20) {
+      /*if (waiters.Count < 20) {
         //... I cannot... - I don't know the value...
-      } else {
+      } else*/
+      {
         while (!waiters.IsEmpty) {
           await Task.Delay(delayTime += 5);
+          DebugCounter.Incg(this, "closing.w");
           tryEnqueueWaiting();
           tryDeliverToPromises();
         }
@@ -142,8 +171,10 @@ namespace Chan
 
       while (!Q.IsEmpty) {
         await Task.Delay(delayTime += 5);
+        DebugCounter.Incg(this, "closing.q");
         tryDeliverToPromises();
       }
+      DebugCounter.Incg(this, "closed");
       //cancell remaning promises : there will never be messages to fill them
       TaskCompletionSource<TMsg> tcs;
       while (promises.TryDequeue(out tcs))

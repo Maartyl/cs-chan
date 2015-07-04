@@ -19,17 +19,29 @@ namespace Chan
       return data;
     }
 
-    public static void Start(T data, Action<DeliverBarrier<T>> register) { 
-      var db = new DeliverBarrier<T>(data);
+    public void WaitAndDispose() {
+      mre.Wait();
+      mre.Dispose();
+    }
+
+    public static void Wait(T data, Action<DeliverBarrier<T>> register) { 
+      var db = Create(data);
       register.Invoke(db);
-      db.mre.Wait();
-      db.mre.Dispose();
+      db.WaitAndDispose();
+    }
+
+    public static DeliverBarrier<T> Create(T data) {
+      return new DeliverBarrier<T>(data);
     }
   }
 
   public static class DeliverBarrier {
-    public static void Start<T>(T data, Action<DeliverBarrier<T>> register) { 
-      DeliverBarrier<T>.Start(data, register);
+    public static void Wait<T>(T data, Action<DeliverBarrier<T>> register) { 
+      DeliverBarrier<T>.Wait(data, register);
+    }
+
+    public static DeliverBarrier<T> Create<T>(T data) {
+      return DeliverBarrier<T>.Create(data);
     }
   }
 }
