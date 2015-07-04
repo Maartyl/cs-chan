@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Channels
+namespace Chan
 {
   //consumes channel, invoking event for each message
   //This is the only way to assure that everyone will erceive everything
@@ -36,7 +36,6 @@ namespace Channels
         }
       } catch (TaskCanceledException ex) {
         //over
-        Console.Error.WriteLine("listen over; " + typeof(TMsg).Name);
       }
 
     }

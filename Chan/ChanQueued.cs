@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Channels
+namespace Chan
 {
   /// <summary>
   /// All messages pass through concurrent queue...
@@ -20,6 +20,9 @@ namespace Channels
   // - that is currently only thing to possibly cause wrong order
   // - happens very rarely: probably just puting a lock around it is good enough
   // -- sadly: lock probably also needed around something common...
+  //OK: I WILL NOT SOLVE THIS PROBLEM WITH ORDER - possibly: another version which has lock, but is slower
+  // - This is only problem if: 2+ receive or 2+ send at the exactly same time, when no-one waiting and empty promises
+  // - It might change order of messages OTHER then the 2 "accessed" simultaneously
   public class ChanQueued<TMsg> : Chan<TMsg> {
     readonly ConcurrentQueue<TMsg> Q = new ConcurrentQueue<TMsg>();
     readonly ConcurrentQueue<TaskCompletionSource<TMsg>> promises = new ConcurrentQueue<TaskCompletionSource<TMsg>>();
@@ -71,13 +74,13 @@ namespace Channels
       //try: deliver promise right away if possible
       if (promises.TryDequeue(out p)) { 
         p.SetResult(msg);
-        return Task.WhenAll(); //completed task
+        return Task.Delay(0); //completed task
       } 
 
       if (Q.Count < qlimit) {//has room to queue msg
         Q.Enqueue(msg);
         tryDeliverToPromises();
-        return Task.WhenAll(); //completed task
+        return Task.Delay(0); //completed task
       } 
 
       //block thread
@@ -117,17 +120,34 @@ namespace Channels
       }
     }
 
-    public override async Task Close() {
-      await base.Close();
+    /// <summary>
+    /// Completes when remaining receiveTasks (promises) are either delivered or canceled
+    /// </summary>
+    protected override async Task CloseImpl() {
       //push rest of waiters and fill promises
       //!!! promises that cennot be delivered must be cancelled
       tryEnqueueWaiting();
       tryDeliverToPromises();
-      await Task.Delay(5); //everything should calm down after a little while
-//      if (!waiters.IsEmpty) {
-//        var wut = "wut";
-//      }
+      int delayTime = 5;
 
+      if (waiters.Count < 20) {
+        //... I cannot... - I don't know the value...
+      } else {
+        while (!waiters.IsEmpty) {
+          await Task.Delay(delayTime += 5);
+          tryEnqueueWaiting();
+          tryDeliverToPromises();
+        }
+      }
+
+      while (!Q.IsEmpty) {
+        await Task.Delay(delayTime += 5);
+        tryDeliverToPromises();
+      }
+      //cancell remaning promises : there will never be messages to fill them
+      TaskCompletionSource<TMsg> tcs;
+      while (promises.TryDequeue(out tcs))
+        tcs.SetCanceled();
     }
 
     protected override bool NoMessagesLeft() {

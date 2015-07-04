@@ -3,24 +3,36 @@ using System;
 using System.Threading.Tasks;
 using System.Collections;
 
-namespace Channels
+namespace Chan
 {
   [TestFixture()]
   public class ChanSimpleTest {
     [Test()]
-    public void AllPassed() {
-      var cs = new ChanQueued<int>();
+    public void AllPassedQueued() {
+      AllPassed(new ChanQueued<int>());
+    }
 
+    [Test()]
+    public void AllPassedBuffered() {
+      AllPassed(new ChanQueued<int>(400));
+    }
+
+    [Test()]
+    public void AllPassedBlocking() {
+      AllPassed(new ChanBlocking<int>());
+    }
+
+    public void AllPassed(Chan<int> chan) {
       Action a = async () => {
         for (int i = 0; i <1000; ++i)
-          await cs.SendAsync(i);
+          await chan.SendAsync(i);
       };
       int rslt = 0;
-      var x = AllPassedAsyncSum(cs, 10000);
+      var x = AllPassedAsyncSum(chan, 10000);
       Action k = async () => rslt = await x;
       k();
       Parallel.Invoke(a, a, a, a, a, a, a, a, a, a);
-      Task.WaitAll(cs.Close(), x);
+      Task.WaitAll(chan.Close(), x);
       Assert.AreEqual(4995000, rslt);
     }
 

@@ -1,10 +1,14 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Channels
+namespace Chan
 {
   public interface IChan<TMsg> {
     Task Close();
+
+    ///completes at the same time as Close() but does not initiate closing.
+    /// - any subsequent call to receive or send is bound to be cancelled
+    Task AfterClosed();
   }
 
   public interface IChanSender<TMsg> : IChan<TMsg> {

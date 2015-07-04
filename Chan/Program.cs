@@ -1,12 +1,12 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Channels
+namespace Chan
 {
   class MainClass {
     public static void Main(string[] args) {
       var test = new ChanSimpleTest();
-      test.AllPassed();
+      //test.AllPassed();
       test.OrderWithSingleInAndOut();
 
       var cs = new ChanQueued<String>();

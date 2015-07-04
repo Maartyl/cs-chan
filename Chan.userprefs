@@ -1,20 +1,19 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/ChanQueued.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/Program.cs">
     <Files>
-      <File FileName="Chan/Program.cs" Line="13" Column="7" />
-      <File FileName="Chan/Chan.cs" Line="33" Column="1" />
-      <File FileName="Chan/NUnitTestClass.cs" Line="13" Column="7" />
-      <File FileName="Chan/MonitorSyncObj.cs" Line="14" Column="22" />
-      <File FileName="Chan/ChanQueued.cs" Line="7" Column="2" />
+      <File FileName="Chan/Program.cs" Line="4" Column="15" />
+      <File FileName="Chan/NUnitTestClass.cs" Line="21" Column="38" />
+      <File FileName="Chan/ChanQueued.cs" Line="24" Column="119" />
       <File FileName="Chan/ChanEvent.cs" Line="31" Column="12" />
+      <File FileName="Chan/IChan.cs" Line="4" Column="15" />
+      <File FileName="Chan/ChanBlocking.cs" Line="18" Column="15" />
+      <File FileName="Chan/TaskCompletionSuorceEmpty.cs" Line="8" Column="6" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="Chan" expanded="True">
-            <Node name="IChan.cs" selected="True" />
-          </Node>
+          <Node name="Chan" expanded="True" selected="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
@@ -24,9 +23,7 @@
         <State />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True">
-          <Node name="Chan" selected="True" />
-        </State>
+        <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="ConnectionManagerPad">
         <State selected="True" />
