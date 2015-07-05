@@ -22,17 +22,25 @@ namespace Chan
       AllPassed(new ChanBlocking<int>());
     }
 
+    [Test()]
+    public void AllPassedAsync() {
+      AllPassed(new ChanAsync<int>());
+    }
+
     public void AllPassed(Chan<int> chan) {
-      Action a = async () => {
+      Func<Task> a = async () => {
         for (int i = 0; i <1000; ++i)
           await chan.SendAsync(i);
+        await chan.Close();
       };
+      var x1 = AllPassedAsyncSum(chan, 10000 / 4);
+      var x2 = AllPassedAsyncSum(chan, 10000 / 4);
+      var x3 = AllPassedAsyncSum(chan, 10000 / 4);
+      var x4 = AllPassedAsyncSum(chan, 10000 / 4);
       int rslt = 0;
-      var x = AllPassedAsyncSum(chan, 10000);
-      Action k = async () => rslt = await x;
+      Action k = async () => rslt = await x1 + await x2 + await x3 + await x4;
       k();
-      Parallel.Invoke(a, a, a, a, a, a, a, a, a, a);
-      Task.WaitAll(chan.Close(), x);
+      Task.WaitAll(a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), x1, x2, x3, x4);
       Assert.AreEqual(4995000, rslt);
     }
 
@@ -72,6 +80,11 @@ namespace Chan
       OrderWithSingleInAndOut(new ChanBlocking<int>());
     }
 
+    [Test()]
+    public void OrderWithSingleInAndOutAsync() {
+      OrderWithSingleInAndOut(new ChanAsync<int>());
+    }
+
     public void OrderWithSingleInAndOut(Chan<int> chan) {
       //this is needed: tests work correctly otherwise... this initialzes thread pool or something...
       Parallel.Invoke(Task.Delay(4).Wait, Task.Delay(3).Wait, Task.Delay(5).Wait);
@@ -87,7 +100,6 @@ namespace Chan
         int cur = int.MinValue;
         try {
           while (true) {
-            //Console.Error.WriteLine("" + chan.GetHashCode() + cur);
             prev = cur;
             cur = await chan.ReceiveAsync();
             if (cur < prev)
@@ -97,12 +109,13 @@ namespace Chan
           DebugCounter.Incg("test.order", "cancelled");
         }
       };
-      Task at = null;
-      Task bt = null;
-      Action a = () => at = af();
-      Action b = () => bt = bf();
-      Parallel.Invoke(b, a);
-      Task.WaitAll(at, bt);
+//      Task at = null;
+//      Task bt = null;
+//      Action a = () => at = af();
+//      Action b = () => bt = bf();
+//      Parallel.Invoke(b, a);
+//      Task.WaitAll(at, bt);
+      Task.WaitAll(af(), bf());
     }
   }
 }

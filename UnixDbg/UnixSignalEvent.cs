@@ -5,7 +5,7 @@ using Mono.Unix;
 namespace UnixDbg
 {
   public static class UnixSignalEvent {
-    static UnixSignal[] signalsUsr1 = new UnixSignal [] {
+    static UnixSignal[] signalsUsr1 = new UnixSignal[] {
       new UnixSignal (Mono.Unix.Native.Signum.SIGUSR1),
     };
 

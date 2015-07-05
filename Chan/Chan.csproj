@@ -44,9 +44,11 @@
     <Compile Include="NUnitTestClass.cs" />
     <Compile Include="ChanQueued.cs" />
     <Compile Include="ChanBlocking.cs" />
-    <Compile Include="TaskCompletionSuorceEmpty.cs" />
     <Compile Include="DeliverBarrier.cs" />
     <Compile Include="DegubCounter.cs" />
+    <Compile Include="ChanAsync.cs" />
+    <Compile Include="DeliverAsync.cs" />
+    <Compile Include="TaskCompletionSourceEmpty.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

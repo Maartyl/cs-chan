@@ -33,9 +33,11 @@ namespace Chan
           //        Action<TMsg> a = ReceivedMessage;
           //        await Task.Factory.FromAsync(a.BeginInvoke(msg), a.EndInvoke); //TODO: simulateously receive and invoke
           ReceivedMessage(await chan.ReceiveAsync());
+          DebugCounter.Incg(this, "event");
         }
       } catch (TaskCanceledException) {
         //over
+        DebugCounter.Incg(this, "over");
       }
 
     }
