@@ -1,0 +1,1 @@
+ps x | grep -v "bash" |  grep -v grep | grep "/usr/bin/mono.*127.*" | cut -f 1 -d' '
