@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
-  public interface IChan<TMsg> {
+  public interface IChanBase<TMsg> {
     Task Close();
 
     ///completes at the same time as Close() but does not initiate closing.
@@ -11,7 +11,7 @@ namespace Chan
     Task AfterClosed();
   }
 
-  public interface IChanSender<TMsg> : IChan<TMsg> {
+  public interface IChanSender<TMsg> : IChanBase<TMsg> {
     /// <summary>
     /// This method BLOCKS until message is enqueued/processed in LOCAL channel.
     /// It is asynchronous for NETWORK channels.
@@ -21,12 +21,12 @@ namespace Chan
     Task SendAsync(TMsg msg);
   }
   //first to ask gets the message
-  public interface IChanReceiver <TMsg> : IChan<TMsg> {
+  public interface IChanReceiver <TMsg> : IChanBase<TMsg> {
     /// Returned task is cancelled if the channel is closed and there will be no more messages.
     Task<TMsg> ReceiveAsync();
   }
 
-  public interface IChanBoth<TMsg> : IChanSender<TMsg>, IChanReceiver<TMsg> {
+  public interface IChan<TMsg> : IChanSender<TMsg>, IChanReceiver<TMsg> { 
 
   }
 }

@@ -8,9 +8,9 @@ namespace Chan
     readonly BlockingCollection<TaskCompletionSource<T>> promises;
     readonly BlockingCollection<DeliverAsync<T>> waiters;
 
-    public ChanAsync(int promisesMax, int waitersMax) { 
-      promises = new BlockingCollection<TaskCompletionSource<T>>(promisesMax);
-      waiters = new BlockingCollection<DeliverAsync<T>>(waitersMax);
+    public ChanAsync(int receiveTaskCountLimit, int sendTaskCountLimit) { 
+      promises = new BlockingCollection<TaskCompletionSource<T>>(receiveTaskCountLimit);
+      waiters = new BlockingCollection<DeliverAsync<T>>(sendTaskCountLimit);
     }
 
     public ChanAsync():this(500,500) {

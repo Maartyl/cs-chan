@@ -5,11 +5,10 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>12.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{924F7673-B3D6-41CD-9CE5-2C956465189E}</ProjectGuid>
+    <ProjectGuid>{2D9D6E78-B407-4F7A-9E35-7550E7AD910A}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Chan</RootNamespace>
-    <AssemblyName>Chan</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>WCFTests</RootNamespace>
+    <AssemblyName>WCFTests</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,30 +32,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="nunit.framework" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ChanEvent.cs" />
-    <Compile Include="Chan.cs" />
-    <Compile Include="NUnitTestClass.cs" />
-    <Compile Include="ChanQueued.cs" />
-    <Compile Include="ChanBlocking.cs" />
-    <Compile Include="DeliverBarrier.cs" />
-    <Compile Include="DegubCounter.cs" />
-    <Compile Include="ChanAsync.cs" />
-    <Compile Include="DeliverAsync.cs" />
-    <Compile Include="TaskCompletionSourceEmpty.cs" />
-    <Compile Include="IChanServiceTest.cs" />
-    <Compile Include="ChanServiceTest.cs" />
-    <Compile Include="IChanBase.cs" />
-    <Compile Include="NetChanBase.cs" />
-    <Compile Include="RemoteException.cs" />
-    <Compile Include="ISerDes.cs" />
-    <Compile Include="SerDesForSerializable.cs" />
+    <Compile Include="IGreeterWcfService.cs" />
+    <Compile Include="GreeterWcfService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

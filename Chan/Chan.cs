@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Chan
 {
   //this partially handles closing of channel, not synchronization
-  public abstract class Chan<TMsg> : IChanBoth<TMsg> {
+  public abstract class Chan<TMsg> : IChan<TMsg> {
     volatile bool closed = false;
     //wraps result of first call to CloseImpl
     volatile TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();

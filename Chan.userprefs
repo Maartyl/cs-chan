@@ -1,26 +1,20 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/UnixSignalEvent.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="WCFTestsClient/MyServiceClient.cs">
     <Files>
-      <File FileName="Chan/Program.cs" Line="9" Column="1" />
-      <File FileName="Chan/NUnitTestClass.cs" Line="69" Column="5" />
-      <File FileName="Chan/ChanQueued.cs" Line="1" Column="1" />
-      <File FileName="Chan/ChanEvent.cs" Line="1" Column="1" />
-      <File FileName="Chan/IChan.cs" Line="1" Column="1" />
-      <File FileName="Chan/ChanBlocking.cs" Line="26" Column="6" />
-      <File FileName="Chan/TaskCompletionSuorceEmpty.cs" Line="1" Column="1" />
-      <File FileName="Chan/Chan.cs" Line="13" Column="30" />
-      <File FileName="Chan/DeliverBarrier.cs" Line="25" Column="1" />
-      <File FileName="Chan/DegubCounter.cs" Line="55" Column="5" />
-      <File FileName="Chan/UnixSignalEvent.cs" Line="2" Column="14" />
+      <File FileName="WCFTests/IGreeterWcfService.cs" Line="3" Column="18" />
+      <File FileName="WCFTests/GreeterWcfService.cs" Line="7" Column="4" />
+      <File FileName="WCFTestsHost/Program.cs" Line="15" Column="19" />
+      <File FileName="WCFTestsClient/MyServiceClient.cs" Line="7" Column="60" />
+      <File FileName="WCFTestsClient/Program.cs" Line="10" Column="7" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Chan" expanded="True" />
-          <Node name="UnixDbg" expanded="True" selected="True">
-            <Node name="References" expanded="True" />
-          </Node>
+          <Node name="WCFTestsClient" expanded="True" />
+          <Node name="WCFTestsGreeter" expanded="True" selected="True" />
+          <Node name="WCFTestsHost" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
