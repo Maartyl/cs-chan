@@ -14,11 +14,11 @@ namespace Chan
     const int MINIMAL_PING_DELAY = 50;
     readonly Stream netIn;
     readonly Stream netOut;
-    byte[] receiveBuffer;
-    byte[] sendBuffer;
+    protected byte[] receiveBuffer;
+    protected byte[] sendBuffer;
     int pingDelayMs;
     volatile int positionCounter = 1;
-    //changed to true when PONG packet received; false before sending PING
+    //changed to true when PONG packet received; =false before sending PING
     volatile bool pongReceived = true;
 
     protected NetChanBase(Stream netIn, Stream netOut, NetChanConfig cfg) {
@@ -28,13 +28,40 @@ namespace Chan
       receiveBuffer = new byte[cfg.InitialReceiveBufferSize];
       sendBuffer = new byte[cfg.InitialSendBufferSize];
       this.pingDelayMs = cfg.PingDelayMs < MINIMAL_PING_DELAY ? MINIMAL_PING_DELAY : cfg.PingDelayMs;
-      //init pingDelay (possibly time to wait for pong... or just next ping checks...)
-      // - this will grow if needed
     }
+
+    protected async Task HandshakeServer(uint key) {
+      var h = await ReceiveHeader();
+      if (h.OpCode == Header.Op.Open) {
+        if (h.Key != key) {
+          await SendError("wrong key");
+          //TODO: decide: safe to put keys in err msg?
+          throw new AccessViolationException("expected and provided key don't match");
+        }
+        await SendSimple(Header.AckFor(h));
+      } else {
+        await SendError("expected OPEN");
+        throw new InvalidOperationException("expected OPEN; got: " + h.OpCode);
+      }
+    }
+
+    protected async Task HandshakeClient(uint key) {
+      var sT = SendSimple(new Header(Header.Op.Open) { Key=key });
+      var hResponse = await ReceiveHeader();
+      await sT;//already completed for sure, but to not miss out tasks...
+      if (hResponse.OpCode == Header.Op.Ack) 
+        return;
+      if (hResponse.OpCode == Header.Op.Err) 
+        await OnErrReceived(hResponse);
+      else
+        throw new InvalidOperationException("expected ACK/ERR; got: " + hResponse.OpCode);
+    }
+
+    public abstract Task Start(uint key);
 
     /// On*Received hooks return next header
     /// (so they can start receivening as soon as possible (which might not be right away: has data))
-    protected virtual async Task ReceiveLoop() {
+    protected async Task ReceiveLoop() {
       var h = await ReceiveHeader();
       while (true)
         switch (h.OpCode) {
@@ -65,40 +92,25 @@ namespace Chan
         }
     }
 
-    protected virtual async Task ReceiveOpen(uint key) {
-      var h = await ReceiveHeader();
-      if (h.OpCode == Header.Op.Open) {
-        if (h.Key != key) {
-          await SendError("wrong key");
-          //TODO: decide: safe to put keys in err msg?
-          throw new AccessViolationException("expected and provided key don't match");
-        }
-        await SendSimple(Header.AckFor(h));
-      } else {
-        await SendError("expected OPEN");
-        throw new InvalidOperationException("expected OPEN; got: " + h.OpCode);
-      }
-    }
-
     protected abstract Task<Header> OnMsgReceived(Header h);
 
-    protected virtual async Task<Header> OnPingReceived(Header h) {
+    protected async Task<Header> OnPingReceived(Header h) {
       var hNext = ReceiveHeader();
       await SendSimple(Header.Pong);
       return await hNext;
     }
 
-    protected virtual Task<Header> OnPongReceived(Header h) {
+    protected Task<Header> OnPongReceived(Header h) {
       pongReceived = true;
       return ReceiveHeader();
     }
 
     protected virtual Task<Header> OnAckReceived(Header h) {
-      //basic implementation does not require ACK: just ignore...
+      //basic implementation does not require MSG.ACK: just ignore...
       return ReceiveHeader();
     }
 
-    protected virtual async Task<Header> OnOpenReceived(Header h) {
+    protected async Task<Header> OnOpenReceived(Header h) {
       //initial OPEN can is handled by something else: this is just error in normal listen...
       // ... or is it? can it be used for anything?
       await SendError("unexpected: OPEN");
@@ -111,7 +123,7 @@ namespace Chan
 
     protected abstract Task OnCloseReceived(Header h);
 
-    protected virtual async Task OnErrReceived(Header h) {
+    protected async Task OnErrReceived(Header h) {
       var msgLen = h.Length;
       if (receiveBuffer.Length < msgLen)
         receiveBuffer = new byte[msgLen];
@@ -131,22 +143,32 @@ namespace Chan
 
     protected Task SendBytes(Header h, byte[] bytes, int offset, ushort count) {
       h.Length = count;
-      if (sendBuffer.Length < count + Header.Size)
-        sendBuffer = new byte[count + Header.Size];
+      if (count == 0)
+        return SendSimple(h);
 
+      var packetSize = count + Header.Size;
+      if (sendBuffer.Length < packetSize)
+        sendBuffer = new byte[packetSize];
+
+      var buff = sendBuffer;
       //merge into 1 write: ping could be sent in midde, breaking the packet
-      Array.Copy(h.Bytes, sendBuffer, Header.Size);
-      if (sendBuffer != bytes || offset != Header.Size)//only copy if not the same place already
-        Array.Copy(bytes, offset, sendBuffer, Header.Size, count);
-      return netOut.WriteAsync(sendBuffer, 0, count + Header.Size);
+      // [h] + [bbbbb] -> [hbbbbb]
+      Array.Copy(h.Bytes, buff, Header.Size);
+      if (buff != bytes || offset != Header.Size)//only copy if not the same place already
+        Array.Copy(bytes, offset, buff, Header.Size, count);
+      return netOut.WriteAsync(buff, 0, packetSize);
     }
 
-    protected Task SendError(/*int code,*/ string message) {
+    protected Task SendError(uint code, string message) {
       var bs = System.Text.Encoding.UTF8.GetBytes(message);
       if (bs.Length > ushort.MaxValue)
         throw new ArgumentException("error message too long (max: 64KB)", "message");
-      var hErr = new Header(Header.Op.Err);
-      return SendBytes(hErr, bs, 0, (ushort) bs.Length);
+      return SendBytes(new Header(Header.Op.Err) { ErrorCode = code }, 
+                       bs, 0, (ushort) bs.Length);
+    }
+
+    protected Task SendError(string message) {
+      return SendError(0, message);
     }
 
     protected Header CreateBaseMsgHeader() {
@@ -187,7 +209,7 @@ namespace Chan
           throw new EndOfStreamException("EOS while receiving " + errWhatReceiving + "; read: (" + read + "/" + count + ")");
         else
           read += curRead;
-        //TODO: start deserializing here
+        //TODO: ?: start deserializing here
       }
     }
     //this class is not thread safe

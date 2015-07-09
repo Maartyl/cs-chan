@@ -1,19 +1,18 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="WCFTestsClient/MyServiceClient.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/NetChanBase.cs">
     <Files>
-      <File FileName="WCFTests/IGreeterWcfService.cs" Line="3" Column="18" />
-      <File FileName="WCFTests/GreeterWcfService.cs" Line="7" Column="4" />
-      <File FileName="WCFTestsHost/Program.cs" Line="15" Column="19" />
-      <File FileName="WCFTestsClient/MyServiceClient.cs" Line="7" Column="60" />
-      <File FileName="WCFTestsClient/Program.cs" Line="10" Column="7" />
+      <File FileName="Chan/NetChanTBase.cs" Line="23" Column="31" />
+      <File FileName="Chan/NetChanReceiverBase.cs" Line="29" Column="6" />
+      <File FileName="Chan/NetChanSenderBase.cs" Line="23" Column="35" />
+      <File FileName="Chan/NetChanConfig.cs" Line="9" Column="50" />
+      <File FileName="Chan/NetChanBase.cs" Line="17" Column="36" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="Chan" expanded="True" />
+          <Node name="Chan" expanded="True" selected="True" />
           <Node name="WCFTestsClient" expanded="True" />
-          <Node name="WCFTestsGreeter" expanded="True" selected="True" />
           <Node name="WCFTestsHost" expanded="True" />
         </State>
       </Pad>

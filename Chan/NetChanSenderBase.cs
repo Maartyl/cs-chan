@@ -20,7 +20,7 @@ namespace Chan
     #endregion
     #region IChanSender implementation
     public Task SendAsync(T msg) {
-      throw new NotImplementedException();
+      return World.SendAsync(msg);
     }
     #endregion
     #region IChanBase implementation
