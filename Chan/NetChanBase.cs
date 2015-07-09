@@ -5,6 +5,11 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
+  //current limitation: most is done asynchronously, but sequentially
+  // - i'm not sure about the implications of doing it concurrently... 
+  // - - (probably need swaping read bufferes / ...) - well, maybe not if I only did 1 packet at a time... 
+  // - - maybe; not priority
+  // - - - ReadHeader could start reading body as soon as done, knowing for which ops...
   public abstract class NetChanBase {
     const int MINIMAL_PING_DELAY = 50;
     readonly Stream netIn;
@@ -16,18 +21,15 @@ namespace Chan
     //changed to true when PONG packet received; false before sending PING
     volatile bool pongReceived = true;
 
-    protected NetChanBase(Stream netIn, Stream netOut, int receiveBufferSize, int sendBufferSize, int pingDelayMs) {
+    protected NetChanBase(Stream netIn, Stream netOut, NetChanConfig cfg) {
+      //thought about defaults: 1024,2048,60*1000
       this.netIn = netIn;
       this.netOut = netOut;
-      receiveBuffer = new byte[receiveBufferSize];
-      sendBuffer = new byte[sendBufferSize];
-      this.pingDelayMs = pingDelayMs < MINIMAL_PING_DELAY ? MINIMAL_PING_DELAY : pingDelayMs;
+      receiveBuffer = new byte[cfg.InitialReceiveBufferSize];
+      sendBuffer = new byte[cfg.InitialSendBufferSize];
+      this.pingDelayMs = cfg.PingDelayMs < MINIMAL_PING_DELAY ? MINIMAL_PING_DELAY : cfg.PingDelayMs;
       //init pingDelay (possibly time to wait for pong... or just next ping checks...)
       // - this will grow if needed
-    }
-
-    protected NetChanBase(Stream netIn, Stream netOut) :this(netIn, netOut, 1024, 2048, 60*1000) {
-      //these are just some random defaults
     }
 
     /// On*Received hooks return next header
@@ -82,7 +84,7 @@ namespace Chan
 
     protected virtual async Task<Header> OnPingReceived(Header h) {
       var hNext = ReceiveHeader();
-      await PongSend(h);
+      await SendSimple(Header.Pong);
       return await hNext;
     }
 
@@ -154,13 +156,13 @@ namespace Chan
       return h;
     }
 
-    async Task<Header> ReceiveHeader() {
+    protected async Task<Header> ReceiveHeader() {
       var bs = new byte[8];
       await ReceiveBytes(bs, 0, 8, "packet header");
       return new Header(bs);
     }
     //continuously sends pings
-    async Task PingLoop(CancellationToken ctkn) {
+    protected async Task PingLoop(CancellationToken ctkn) {
       try {
         await Task.Delay(pingDelayMs, ctkn);
         while (pongReceived) {
@@ -176,18 +178,12 @@ namespace Chan
       throw new TimeoutException("PING: no PONG received");
     }
 
-    Task PongSend(Header h) {
-      //can use cashed unless any data from h is needed
-      //i.e. pos
-      return SendSimple(Header.Pong);
-    }
-
     /// doesn't do "fit" checks
     protected async Task ReceiveBytes(byte[] buffer, int index, int count, string errWhatReceiving) {
       int read = 0; //#of already read bytes == pos to bs where to read to
       while (read != count) {
         var curRead = await netIn.ReadAsync(buffer, index + read, count - read);
-        if (curRead == 0)
+        if (curRead <= 0)
           throw new EndOfStreamException("EOS while receiving " + errWhatReceiving + "; read: (" + read + "/" + count + ")");
         else
           read += curRead;

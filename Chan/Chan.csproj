@@ -56,7 +56,11 @@
     <Compile Include="NetChanBase.cs" />
     <Compile Include="RemoteException.cs" />
     <Compile Include="ISerDes.cs" />
-    <Compile Include="SerDesForSerializable.cs" />
+    <Compile Include="BinarySerDesForSerializable.cs" />
+    <Compile Include="NetChanReceiverBase.cs" />
+    <Compile Include="NetChanSenderBase.cs" />
+    <Compile Include="NetChanConfig.cs" />
+    <Compile Include="NetChanTBase.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
