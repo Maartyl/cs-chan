@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Chan
 {
   public abstract class NetChanReceiverBase<T> : NetChanTBase<T>, IChanReceiver<T> {
-    protected NetChanReceiverBase(Stream netIn, Stream netOut, NetChanConfig<T> cfg):base(netIn, netOut, cfg) {
+    protected NetChanReceiverBase(NetChanConfig<T> cfg):base(cfg) {
 
     }
     #region implemented abstract members of NetChanBase

@@ -21,10 +21,10 @@ namespace Chan
     //changed to true when PONG packet received; =false before sending PING
     volatile bool pongReceived = true;
 
-    protected NetChanBase(Stream netIn, Stream netOut, NetChanConfig cfg) {
+    protected NetChanBase(NetChanConfig cfg) {
       //thought about defaults: 1024,2048,60*1000
-      this.netIn = netIn;
-      this.netOut = netOut;
+      this.netIn = cfg.In;
+      this.netOut = cfg.Out;
       receiveBuffer = new byte[cfg.InitialReceiveBufferSize];
       sendBuffer = new byte[cfg.InitialSendBufferSize];
       this.pingDelayMs = cfg.PingDelayMs < MINIMAL_PING_DELAY ? MINIMAL_PING_DELAY : cfg.PingDelayMs;

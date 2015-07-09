@@ -1,9 +1,14 @@
 // using System.Threading.Tasks;
 using System;
+using System.IO;
 
 namespace Chan
 {
   public class NetChanConfig {
+    public Stream In{ get; set; }
+
+    public Stream Out{ get; set; }
+
     public int InitialReceiveBufferSize{ get; set; }
 
     public int InitialSendBufferSize{ get; set; }

@@ -10,15 +10,16 @@ namespace Chan
     protected readonly IChan<T> World;
     protected readonly ISerDes<T> SerDes;
 
-    protected NetChanTBase(Stream netIn, Stream netOut, NetChanConfig<T> cfg):base(netIn, netOut, cfg) {
+    protected NetChanTBase(NetChanConfig<T> cfg):base(cfg) {
       World = cfg.Channel;
       var sd = cfg.SerDes;
       if (sd == null)
-        throw new ArgumentNullException("type(" + typeof(T) + ") is not serializable and requires valid SerDes`1.");
+        throw new ArgumentNullException("type(" + typeof(T) + ") is not serializable and requires valid SerDes`1");
       SerDes = sd;
     }
 
     protected Task SendMsg(T msg) {
+      //this method could be in sender, but... who knows: might move, might be useful
       ushort length;
       var buff = sendBuffer; //in case someone changes the buffer
       bool couldReuseBuffer; //thanks to this: sends from 0: SendBytes will shift the data while merging
