@@ -149,7 +149,7 @@ namespace Chan
     /// <summary>
     /// Completes when remaining receiveTasks (promises) are either delivered or canceled
     /// </summary>
-    protected override async Task CloseImpl() {
+    protected override async Task CloseOnce() {
       DebugCounter.Incg(this, "closing.start");
       //push rest of waiters and fill promises
       //!!! promises that cennot be delivered must be cancelled

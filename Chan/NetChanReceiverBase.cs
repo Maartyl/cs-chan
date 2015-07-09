@@ -9,7 +9,7 @@ namespace Chan
     protected NetChanReceiverBase(NetChanConfig<T> cfg):base(cfg) {
 
     }
-    #region implemented abstract members of NetChanBase
+
     protected override Task<Header> OnMsgReceived(Header h) {
       throw new NotImplementedException();
     }
@@ -17,21 +17,14 @@ namespace Chan
     protected override Task OnCloseReceived(Header h) {
       throw new NotImplementedException();
     }
-    #endregion
-    #region IChanReceiver implementation
+
     public Task<T> ReceiveAsync() {
-      return World.ReceiveAsync();
-    }
-    #endregion
-    #region IChanBase implementation
-    public Task Close() {
       throw new NotImplementedException();
     }
 
-    public Task AfterClosed() {
+    protected override Task CloseOnce() {
       throw new NotImplementedException();
     }
-    #endregion
   }
 }
 

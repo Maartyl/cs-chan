@@ -5,24 +5,21 @@ namespace Chan
 {
   //this partially handles closing of channel, not synchronization
   public abstract class Chan<TMsg> : IChan<TMsg> {
-    volatile bool closed = false;
-    //wraps result of first call to CloseImpl
-    volatile TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
+    //wraps result of first call to CloseOnce
+    readonly TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
 
-    public bool Closed { get { return closed; } }
+    public bool Closed { get { return closingTaskPromise.Task.IsCompleted; } }
 
-    public virtual async Task Close() {
-      if (!closed)
+    public virtual Task Close() {
+      if (!Closed)
         lock (closingTaskPromise)
-          if (!closed) {
-            closed = true;
-            closingTaskPromise.SetResult(CloseImpl());
-          }
-      await await closingTaskPromise.Task;
+          if (!Closed) 
+            closingTaskPromise.SetResult(CloseOnce());
+      return AfterClosed();
     }
 
     ///only called once
-    protected virtual Task CloseImpl() {
+    protected virtual Task CloseOnce() {
       return Task.Delay(0);
     }
 

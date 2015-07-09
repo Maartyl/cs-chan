@@ -59,13 +59,16 @@ namespace Chan
         }
     }
 
-    protected async override Task CloseImpl() {
-      await Task.Delay(0);
+    protected async override Task CloseOnce() {
+      //await Task.Yield();
       waiters.CompleteAdding();
-      while (!NoMessagesLeft())
-        await Task.Delay(5);//wait for calls to receive, until all waiters gone
 
-      TaskCompletionSource<T> p;
+      //wait for calls to receive; until all waiters gone
+      var waitTime = 3;
+      while (!NoMessagesLeft())
+        await Task.Delay(waitTime = (int) (waitTime * 1.8));
+
+      TaskCompletionSource<T> p; //cancel all promises that cannot be delivered
       while (promises.TryTake(out p)) {
         DebugCounter.Incg(this, "e.p");
         p.SetCanceled();

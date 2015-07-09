@@ -89,6 +89,7 @@ namespace Chan
           default:
             h = await OnDefaultReceived(h);
           break;
+        //TODO: add OnEndReceived
         }
     }
 
@@ -159,12 +160,13 @@ namespace Chan
       return netOut.WriteAsync(buff, 0, packetSize);
     }
 
-    protected Task SendError(uint code, string message) {
+    protected async Task SendError(ushort code, string message) {
       var bs = System.Text.Encoding.UTF8.GetBytes(message);
       if (bs.Length > ushort.MaxValue)
         throw new ArgumentException("error message too long (max: 64KB)", "message");
-      return SendBytes(new Header(Header.Op.Err) { ErrorCode = code }, 
-                       bs, 0, (ushort) bs.Length);
+      await SendBytes(new Header(Header.Op.Err) { ErrorCode = code }, 
+                      bs, 0, (ushort) bs.Length);
+      await Flush();
     }
 
     protected Task SendError(string message) {
@@ -192,12 +194,17 @@ namespace Chan
 
           var delay = Task.Delay(pingDelayMs, ctkn);
           await SendSimple(Header.Ping);
+          await Flush();
           await delay;
         }
       } catch (TaskCanceledException) {
         return; //ok end
       }
       throw new TimeoutException("PING: no PONG received");
+    }
+
+    protected Task Flush() {
+      return netOut.FlushAsync();
     }
 
     /// doesn't do "fit" checks
@@ -286,12 +293,26 @@ namespace Chan
       public static Header AckFor(Header h) {
         var hAck = new Header(Op.Ack);
         hAck.Position = h.Position;
+        hAck.Fragment = h.Fragment;
         return hAck;
+      }
+
+      public override string ToString() {
+        string format = "[{0} {1}]";
+        if (OpCode == Op.Err)
+          format = "[{0} {1} {5}#{3}]";
+        else if (OpCode == Op.Msg)
+            format = "[{0} {1} {2}{7}#{3}]";
+          else if (OpCode == Op.Open) 
+              format = "[{0} {1} {6}]";
+        string hex = BitConverter.ToString(Bytes).Replace("-", "");
+        return string.Format(format, hex, OpCode, Fragment, Length, Position, ErrorCode, Key, HasNextFragment ? "+" : "");
       }
 
       public static readonly Header Ping = new Header(Op.Ping);
       //without same position: this Pong is enough
       public static readonly Header Pong = new Header(Op.Pong);
+      public static readonly Header Close = new Header(Op.Close);
 
       [Flags]
       private enum Flag : byte {

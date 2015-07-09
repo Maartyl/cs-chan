@@ -56,7 +56,7 @@ namespace Chan
       return Task.Delay(0);
     }
 
-    protected override async Task CloseImpl() {
+    protected override async Task CloseOnce() {
       DebugCounter.Incg(this, "closing.start");
 
       while (!waiters.IsEmpty)

@@ -9,6 +9,9 @@ namespace Chan
       var ctknSrc = new CancellationTokenSource();
       PeriodicCheckDebugCounter(ctknSrc.Token);
 
+      var testNet = new NetChanTest();
+      testNet.HeaderToString();
+
       var test = new ChanSimpleTest();
       Console.WriteLine("start");
 

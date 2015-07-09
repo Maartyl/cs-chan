@@ -118,5 +118,39 @@ namespace Chan
       Task.WaitAll(af(), bf());
     }
   }
+
+  [TestFixture]
+  public class NetChanTest : NetChanBase {
+
+    #region implemented abstract members of NetChanBase
+    public NetChanTest():base(new NetChanConfig()) {
+
+    }
+
+    public override Task Start(uint key) {
+      throw new NotImplementedException();
+    }
+
+    protected override Task<Header> OnMsgReceived(Header h) {
+      throw new NotImplementedException();
+    }
+
+    protected override Task OnCloseReceived(Header h) {
+      throw new NotImplementedException();
+    }
+    #endregion
+    [Test]
+    public void HeaderToString() {
+      //I know, this is not a proper test...
+      Console.WriteLine(Header.Close);
+      Console.WriteLine(Header.Ping);
+      Console.WriteLine(Header.Pong);
+      Console.WriteLine(CreateBaseMsgHeader());
+      Console.WriteLine(CreateBaseMsgHeader());
+      Console.WriteLine(new Header(Header.Op.Err) { ErrorCode = 45, Length = 100 });
+      Console.WriteLine(new Header(Header.Op.Open) { Key=789564 });
+      Console.WriteLine(Header.AckFor(CreateBaseMsgHeader()));
+    }
+  }
 }
 

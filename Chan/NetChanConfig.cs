@@ -14,16 +14,16 @@ namespace Chan
     public int InitialSendBufferSize{ get; set; }
 
     public int PingDelayMs { get; set; }
+    //public int MembraneBufferSize { get; set; } //for world
   }
 
   public class NetChanConfig<T> : NetChanConfig {
-    IChan<T> channel;
-
-    public IChan<T> Channel {
-      get { return channel = channel ?? new ChanAsync<T>();}
-      set { channel = value;}
-    }
-
+    //    IChan<T> channel;
+    //
+    //    public IChan<T> InternalChannel {
+    //      get { return channel = channel ?? new ChanAsync<T>();}
+    //      set { channel = value;}
+    //    }
     ISerDes<T> serDes;
 
     public ISerDes<T> SerDes {
