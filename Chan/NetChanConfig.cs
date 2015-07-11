@@ -5,9 +5,9 @@ using System.IO;
 namespace Chan
 {
   public class NetChanConfig {
-    public Stream In{ get; set; }
+    internal Stream In{ get; set; }
 
-    public Stream Out{ get; set; }
+    internal Stream Out{ get; set; }
 
     public int InitialReceiveBufferSize{ get; set; }
 

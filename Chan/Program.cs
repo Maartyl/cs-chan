@@ -1,40 +1,53 @@
-using System;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Chan
 {
   public class MainClass {
     public static void Main(string[] args) {
-      var ctknSrc = new CancellationTokenSource();
-      PeriodicCheckDebugCounter(ctknSrc.Token);
+      //var ctknSrc = new CancellationTokenSource();
+      //PeriodicCheckDebugCounter(ctknSrc.Token);
 
-      var testNet = new NetChanTest();
-      testNet.HeaderToString();
+      //var testNet = new NetChanTest();
+      //testNet.HeaderToString();
 
-      var test = new ChanSimpleTest();
-      Console.WriteLine("start");
+//      var test = new ChanSimpleTest();
+//      Console.WriteLine("start");
+//
+//      test.AllPassedAsync();
+//      Console.WriteLine("all");
+//      DebugCounter.Glob.Print(Console.Error);
+//      DebugCounter.Glob.Clear();
+//
+//      test.OrderWithSingleInAndOutAsync();
+//      //test.OrderWithSingleInAndOutBuffered();
+//      //test.OrderWithSingleInAndOutQueued();
+//      Console.WriteLine("order");
+//      DebugCounter.Glob.Print(Console.Error);
+//      DebugCounter.Glob.Clear();
 
-      test.AllPassedAsync();
-      Console.WriteLine("all");
-      DebugCounter.Glob.Print(Console.Error);
-      DebugCounter.Glob.Clear();
+      //var chan = new ChanAsync<String>();
 
-      test.OrderWithSingleInAndOutAsync();
-      //test.OrderWithSingleInAndOutBuffered();
-      //test.OrderWithSingleInAndOutQueued();
-      Console.WriteLine("order");
-      DebugCounter.Glob.Print(Console.Error);
-      DebugCounter.Glob.Clear();
+      //new ChanEvent<String>(chan, Console.WriteLine);
 
-      var chan = new ChanAsync<String>();
-      new ChanEvent<String>(chan, Console.WriteLine);
+      //DebugCounter.Glob.Print(Console.Error);
+      //ctknSrc.Cancel();
+      // exec(cS).Wait();
+      Rpl().Wait();
+     
+      //DebugCounter.Glob.Print(Console.Error);
+    }
 
-      DebugCounter.Glob.Print(Console.Error);
-      ctknSrc.Cancel();
-
-      exec(chan).Wait();
-      DebugCounter.Glob.Print(Console.Error);
+    static async Task Rpl() {
+      var rT = new TaskCompletionSource< IChanReceiver<string>>();
+      var sT = new TaskCompletionSource< IChanSender<string>>();
+      var nT = InitNet(rT, sT);
+      new ChanEvent<String>(await rT.Task, Console.WriteLine);
+      await exec(await sT.Task);
     }
 
     static async Task exec(IChanSender<String> cs) {
@@ -61,6 +74,43 @@ namespace Chan
       } catch (TaskCanceledException) {
         
       }
+    }
+
+    static async Task InitNet<T>(TaskCompletionSource<IChanReceiver<T>> chanR, TaskCompletionSource< IChanSender<T>> chanS) {
+      TaskCompletionSource<TcpClient> serverTcpPromise = new TaskCompletionSource<TcpClient>();
+      TcpListener l = new TcpListener(IPAddress.Any, 7896);
+      l.Start();
+      l.BeginAcceptTcpClient(ar => {
+        var c = l.EndAcceptTcpClient(ar);
+        serverTcpPromise.SetResult(c);
+      }, l);
+
+      //start client
+      var clientTcp = new TcpClient("localhost", 7896);
+      var serverTcp = await serverTcpPromise.Task;
+      l.Stop();
+
+      var cfgIn = new NetChanConfig<T>() {
+        In = clientTcp.GetStream(),
+        Out = clientTcp.GetStream(),
+        InitialReceiveBufferSize = 128, 
+        InitialSendBufferSize = 128,
+        PingDelayMs = 60*1000
+      };
+      var cfgOut = new NetChanConfig<T>() {
+        In = serverTcp.GetStream(),
+        Out = serverTcp.GetStream(),
+        InitialReceiveBufferSize = 128,
+        InitialSendBufferSize = 128,
+        PingDelayMs = 60*1000
+      };
+      var s = new NetChanSenderServer<T>(cfgOut);
+      var r = new NetChanReceiverClient<T>(cfgIn);
+      chanR.SetResult(r);
+      chanS.SetResult(s);
+      var sT = s.Start(42);
+      var rT = r.Start(42);
+      await Task.WhenAll(sT, rT);
     }
   }
 }

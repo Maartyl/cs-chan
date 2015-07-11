@@ -17,7 +17,8 @@ namespace Chan
       var senderT = PipeWorldSend();
       Exception failed = null;
       try {
-        var firstT = await Task.WhenAny(receiverT, senderT);
+        /*var firstT =*/
+        await Task.WhenAny(receiverT, senderT);
         //if senderT is first (channel got closed): there still could be exception in receiver / could go on forever...
         // - cancellation token? - crazy distribution / inst.member
       } catch (Exception ex) {
@@ -134,6 +135,7 @@ namespace Chan
 
     protected override async Task CloseOnce() {
       await world.Close();
+      RequestCancel();
       //close world; call virtual cleanup
       //DON'T send CLOSE : it will be called once PipeWorlSend completes: after read all from world
       // ... this is probably really all I need...

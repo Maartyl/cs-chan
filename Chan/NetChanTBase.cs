@@ -31,9 +31,7 @@ namespace Chan
     }
 
     ///only called once
-    protected virtual Task CloseOnce() {
-      return Task.Delay(0);
-    }
+    protected abstract Task CloseOnce();
 
     public async Task AfterClosed() {
       await await closingTaskPromise.Task;

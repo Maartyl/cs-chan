@@ -63,6 +63,8 @@
     <Compile Include="DebugCounter.cs" />
     <Compile Include="NetChanSenderServer.cs" />
     <Compile Include="NetChanSenderClient.cs" />
+    <Compile Include="NetChanReceiverServer.cs" />
+    <Compile Include="NetChanReceiverClient.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

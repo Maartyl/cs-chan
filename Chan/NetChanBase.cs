@@ -20,6 +20,8 @@ namespace Chan
     volatile int positionCounter = 1;
     //changed to true when PONG packet received; =false before sending PING
     volatile bool pongReceived = true;
+    //this cancels all that needs it at end: ping loop, receiveing...
+    readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
 
     protected NetChanBase(NetChanConfig cfg) {
       //thought about defaults: 1024,2048,60*1000
@@ -39,6 +41,7 @@ namespace Chan
           throw new AccessViolationException("expected and provided key don't match");
         }
         await SendSimple(Header.AckFor(h));
+        await Flush();
       } else {
         await SendError("expected OPEN");
         throw new InvalidOperationException("expected OPEN; got: " + h.OpCode);
@@ -46,9 +49,10 @@ namespace Chan
     }
 
     protected async Task HandshakeClient(uint key) {
-      var sT = SendSimple(new Header(Header.Op.Open) { Key=key });
+      await SendSimple(new Header(Header.Op.Open) { Key=key });
+      await Flush();
       var hResponse = await ReceiveHeader();
-      await sT;//already completed for sure, but to not miss out tasks...
+
       if (hResponse.OpCode == Header.Op.Ack) 
         return;
       if (hResponse.OpCode == Header.Op.Err) 
@@ -62,35 +66,42 @@ namespace Chan
     /// On*Received hooks return next header
     /// (so they can start receivening as soon as possible (which might not be right away: has data))
     protected async Task ReceiveLoop() {
-      var h = await ReceiveHeader();
-      while (true)
-        switch (h.OpCode) {
-          case Header.Op.Msg:
-            h = await OnMsgReceived(h);
-          break;
-          case Header.Op.Ping:
-            h = await OnPingReceived(h);
-          break;
-          case Header.Op.Pong:
-            h = await OnPongReceived(h);
-          break;
-          case Header.Op.Ack:
-            h = await OnAckReceived(h);
-          break;
-          case Header.Op.Open:
-            h = await OnOpenReceived(h);
-          break;
-          case Header.Op.Close:
-            await OnCloseReceived(h);
-            return;
-          case Header.Op.Err:
-            await OnErrReceived(h);
-            return;
-          default:
-            h = await OnDefaultReceived(h);
-          break;
-        //TODO: add OnEndReceived
-        }
+      try {
+        var h = await ReceiveHeader();
+        while (true)
+          switch (h.OpCode) {
+            case Header.Op.Msg:
+              h = await OnMsgReceived(h);
+            break;
+            case Header.Op.Ping:
+              h = await OnPingReceived(h);
+            break;
+            case Header.Op.Pong:
+              h = await OnPongReceived(h);
+            break;
+            case Header.Op.Ack:
+              h = await OnAckReceived(h);
+            break;
+            case Header.Op.Open:
+              h = await OnOpenReceived(h);
+            break;
+            case Header.Op.Close:
+              await OnCloseReceived(h);
+              return;
+            case Header.Op.Err:
+              await OnErrReceived(h);
+              return;
+            default:
+              h = await OnDefaultReceived(h);
+            break;
+          //TODO: add OnEndReceived
+          }
+      } catch (TaskCanceledException ex) {
+        //not sure how to return something cancelled...
+        // - maybe not catch?
+        // - Do I want that? Or do I want to end fine?
+        // - Has canceled receiving ended fine?
+      }
     }
 
     protected abstract Task<Header> OnMsgReceived(Header h);
@@ -98,6 +109,7 @@ namespace Chan
     protected async Task<Header> OnPingReceived(Header h) {
       var hNext = ReceiveHeader();
       await SendSimple(Header.Pong);
+      await Flush();
       return await hNext;
     }
 
@@ -132,6 +144,9 @@ namespace Chan
       var msgT = ReceiveBytes(bfr, 0, msgLen, "ERR message");
 
       //TODO: perform cleanup (cancel ping, delete stuff, call something virtual, ...)
+      RequestCancel();
+      //sendBuffer = null;// possibly GC sooner - reference to this object might still exist for quite a while
+      //receiveBuffer = null;
 
       await msgT;
       var msgStr = System.Text.Encoding.UTF8.GetString(bfr, 0, msgLen);
@@ -139,7 +154,7 @@ namespace Chan
     }
 
     protected Task SendSimple(Header h) {
-      return netOut.WriteAsync(h.Bytes, 0, Header.Size);
+      return netOut.WriteAsync(h.Bytes, 0, Header.Size, Token);
     }
 
     protected Task SendBytes(Header h, byte[] bytes, int offset, ushort count) {
@@ -152,12 +167,12 @@ namespace Chan
         sendBuffer = new byte[packetSize];
 
       var buff = sendBuffer;
-      //merge into 1 write: ping could be sent in midde, breaking the packet
+      //merge into 1 write: ~ping/* could be sent in midde, breaking the packet
       // [h] + [bbbbb] -> [hbbbbb]
       Array.Copy(h.Bytes, buff, Header.Size);
-      if (buff != bytes || offset != Header.Size)//only copy if not the same place already
+      if (buff != bytes || offset != Header.Size)//only copy if not the same place already (should be the same often)
         Array.Copy(bytes, offset, buff, Header.Size, count);
-      return netOut.WriteAsync(buff, 0, packetSize);
+      return netOut.WriteAsync(buff, 0, packetSize, Token);
     }
 
     protected async Task SendError(ushort code, string message) {
@@ -174,7 +189,9 @@ namespace Chan
     }
 
     protected Header CreateBaseMsgHeader() {
+      #pragma warning disable 420
       var pos = Interlocked.Increment(ref positionCounter);
+      #pragma warning restore 420
       var h = new Header(Header.Op.Msg);
       h.Position = (ushort) (pos % ushort.MaxValue);
       return h;
@@ -200,18 +217,27 @@ namespace Chan
       } catch (TaskCanceledException) {
         return; //ok end
       }
+      RequestCancel();
       throw new TimeoutException("PING: no PONG received");
     }
 
+    ///NetworkStream.Flush does nothing
+    /// - this can be useful in case, when NetworkStream is wrapped / something else entirely ...
     protected Task Flush() {
-      return netOut.FlushAsync();
+      return netOut.FlushAsync(); //shouldn't need to be cancellable
     }
 
-    /// doesn't do "fit" checks
+    protected void RequestCancel() {
+      cancelSource.Cancel();
+    }
+
+    protected CancellationToken Token { get { return cancelSource.Token; } }
+
+    /// doesn't do "fit/null" checks
     protected async Task ReceiveBytes(byte[] buffer, int index, int count, string errWhatReceiving) {
       int read = 0; //#of already read bytes == pos to bs where to read to
       while (read != count) {
-        var curRead = await netIn.ReadAsync(buffer, index + read, count - read);
+        var curRead = await netIn.ReadAsync(buffer, index + read, count - read, Token);
         if (curRead <= 0)
           throw new EndOfStreamException("EOS while receiving " + errWhatReceiving + "; read: (" + read + "/" + count + ")");
         else
@@ -325,7 +351,7 @@ namespace Chan
         Msg = 1,
         Ack = 2,
         Open = 100,
-        End = 102,
+        //End = 102,
         Close = 110,
         Ping = 200,
         Pong = 201

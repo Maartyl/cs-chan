@@ -25,6 +25,7 @@ namespace TestTcp
       l.Start();
       l.BeginAcceptTcpClient(ar => {
         var c = l.EndAcceptTcpClient(ar);
+        l.Stop();
         //var s = new StreamWriter(c.GetStream());
         //s.WriteLine("test writer : needed");
         //s.Flush();
@@ -37,7 +38,7 @@ namespace TestTcp
       var q = new TcpClient("localhost", 7896);
       var qs = new StreamReader(q.GetStream());
       Console.WriteLine(qs.ReadLine());
-      l.Stop();
+      // l.Stop();
     }
   }
 }
