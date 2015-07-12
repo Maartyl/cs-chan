@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
-  public abstract class NetChanTBase<T> : NetChanBase, IChanBase<T> {
+  public abstract class NetChanTBase<T> : NetChanBase, IChanBase {
     //I present myself to world through membrane; using other side of it from the inside
     //protected readonly IChan<T> World;
     protected readonly ISerDes<T> SerDes;

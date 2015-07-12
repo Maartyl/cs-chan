@@ -66,6 +66,7 @@
     <Compile Include="LocalChan\DeliverBarrier.cs" />
     <Compile Include="ChanEvent.cs" />
     <Compile Include="ChanStore.cs" />
+    <Compile Include="ExtensionHelpers.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

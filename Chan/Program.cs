@@ -37,9 +37,39 @@ namespace Chan
       //DebugCounter.Glob.Print(Console.Error);
       //ctknSrc.Cancel();
       // exec(cS).Wait();
-      Rpl().Wait();
+
+      //
+      //Rpl().Wait();
+
+      var s = new ChanStore();
+      //var a = new ChanAsync<int>(); 
+      var a = new QQQ(); 
+      s.RegisterReceiver(new Uri("chan:test"), (IChanReceiver<long>) a);
+      var r2 = s.GetReceiver<string>(new Uri("chan:test"));
      
       //DebugCounter.Glob.Print(Console.Error);
+    }
+
+    class QQQ : IChanReceiver<long>, IChanReceiver<int> {
+      #region IChanReceiver implementation
+      Task<int> IChanReceiver<int>.ReceiveAsync() {
+        throw new NotImplementedException();
+      }
+      #endregion
+      #region IChanReceiver implementation
+      Task<long> IChanReceiver<long>.ReceiveAsync() {
+        throw new NotImplementedException();
+      }
+      #endregion
+      #region IChanBase implementation
+      Task IChanBase.Close() {
+        throw new NotImplementedException();
+      }
+
+      Task IChanBase.AfterClosed() {
+        throw new NotImplementedException();
+      }
+      #endregion
     }
 
     static async Task Rpl() {
