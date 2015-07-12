@@ -1,4 +1,3 @@
-// using System.Threading.Tasks;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -21,12 +20,14 @@ namespace Chan
 
     private class SerializableWrapper : ISerDes<T> {
       #region ISerDes implementation
+      BinaryFormatter formatter = new BinaryFormatter();
+
       public void Serialize(Stream s, T obj) {
-        new BinaryFormatter().Serialize(s, obj);
+        formatter.Serialize(s, obj);
       }
 
       public T Deserialize(Stream s) {
-        return (T) new BinaryFormatter().Deserialize(s);
+        return (T) formatter.Deserialize(s);
       }
       #endregion
     }
