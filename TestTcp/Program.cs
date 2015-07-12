@@ -39,6 +39,7 @@ namespace TestTcp
       var qs = new StreamReader(q.GetStream());
       Console.WriteLine(qs.ReadLine());
       // l.Stop();
+
     }
   }
 }

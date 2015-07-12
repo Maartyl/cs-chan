@@ -24,11 +24,11 @@ namespace Chan
     readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
 
     protected NetChanBase(NetChanConfig cfg) {
-      //thought about defaults: 1024,2048,60*1000
+      //a thought about defaults: 1024,2048,60*1000
       this.netIn = cfg.In;
       this.netOut = cfg.Out;
-      receiveBuffer = new byte[cfg.InitialReceiveBufferSize];
-      sendBuffer = new byte[cfg.InitialSendBufferSize];
+      this.receiveBuffer = new byte[cfg.InitialReceiveBufferSize];
+      this.sendBuffer = new byte[cfg.InitialSendBufferSize];
       this.pingDelayMs = cfg.PingDelayMs < MINIMAL_PING_DELAY ? MINIMAL_PING_DELAY : cfg.PingDelayMs;
     }
 
@@ -37,8 +37,8 @@ namespace Chan
       if (h.OpCode == Header.Op.Open) {
         if (h.Key != key) {
           await SendError("wrong key");
-          //TODO: decide: safe to put keys in err msg?
-          throw new AccessViolationException("expected and provided key don't match");
+          //TODO: decide: safe to put keys in err msg? - it's just something random...
+          throw new AccessViolationException("expected and provided key don't match (Expected: " + key + ", Got:" + h.Key + ")");
         }
         await SendSimple(Header.AckFor(h));
         await Flush();
@@ -140,8 +140,8 @@ namespace Chan
       var msgLen = h.Length;
       if (receiveBuffer.Length < msgLen)
         receiveBuffer = new byte[msgLen];
-      var bfr = receiveBuffer; //retain reference if cleanup frees buffers
-      var msgT = ReceiveBytes(bfr, 0, msgLen, "ERR message");
+      var buff = receiveBuffer; //retain reference if cleanup frees buffers
+      var msgT = ReceiveBytes(buff, 0, msgLen, "ERR message");
 
       //TODO: perform cleanup (cancel ping, delete stuff, call something virtual, ...)
       RequestCancel();
@@ -149,7 +149,7 @@ namespace Chan
       //receiveBuffer = null;
 
       await msgT;
-      var msgStr = System.Text.Encoding.UTF8.GetString(bfr, 0, msgLen);
+      var msgStr = System.Text.Encoding.UTF8.GetString(buff, 0, msgLen);
       throw new RemoteException(msgStr);
     }
 
@@ -167,7 +167,7 @@ namespace Chan
         sendBuffer = new byte[packetSize];
 
       var buff = sendBuffer;
-      //merge into 1 write: ~ping/* could be sent in midde, breaking the packet
+      //merge into 1 write: ~ping/something could be sent in midde, breaking the packet
       // [h] + [bbbbb] -> [hbbbbb]
       Array.Copy(h.Bytes, buff, Header.Size);
       if (buff != bytes || offset != Header.Size)//only copy if not the same place already (should be the same often)
@@ -193,7 +193,7 @@ namespace Chan
       var pos = Interlocked.Increment(ref positionCounter);
       #pragma warning restore 420
       var h = new Header(Header.Op.Msg);
-      h.Position = (ushort) (pos % ushort.MaxValue);
+      h.Position = (ushort) (pos % (ushort.MaxValue + 1));
       return h;
     }
 

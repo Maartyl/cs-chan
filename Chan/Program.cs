@@ -47,7 +47,7 @@ namespace Chan
       var sT = new TaskCompletionSource< IChanSender<string>>();
       var nT = InitNet(rT, sT);
       new ChanEvent<String>(await rT.Task, Console.WriteLine);
-      await exec(await sT.Task);
+      await Task.WhenAny(nT, exec(await sT.Task));
     }
 
     static async Task exec(IChanSender<String> cs) {
