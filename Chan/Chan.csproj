@@ -67,6 +67,9 @@
     <Compile Include="ChanEvent.cs" />
     <Compile Include="ChanStore.cs" />
     <Compile Include="ExtensionHelpers.cs" />
+    <Compile Include="ChanTee.cs" />
+    <Compile Include="INetChanProvider.cs" />
+    <Compile Include="IChanFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

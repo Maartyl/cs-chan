@@ -39,13 +39,13 @@ namespace Chan
       // exec(cS).Wait();
 
       //
-      //Rpl().Wait();
+      Rpl().Wait();
 
-      var s = new ChanStore();
-      //var a = new ChanAsync<int>(); 
-      var a = new QQQ(); 
-      s.RegisterReceiver(new Uri("chan:test"), (IChanReceiver<long>) a);
-      var r2 = s.GetReceiver<string>(new Uri("chan:test"));
+//      var s = new ChanStore();
+//      //var a = new ChanAsync<int>(); 
+//      var a = new QQQ(); 
+//      s.RegisterReceiver(new Uri("chan:test"), (IChanReceiver<long>) a);
+//      var r2 = s.GetReceiver<int>(new Uri("chan:test"));
      
       //DebugCounter.Glob.Print(Console.Error);
     }

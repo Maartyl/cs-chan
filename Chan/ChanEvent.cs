@@ -5,10 +5,11 @@ namespace Chan
 {
   //consumes channel, invoking event for each message
   //This is the only way to assure that everyone will erceive everything
-  public class ChanEvent<TMsg> {
+  public class ChanEvent<TMsg> : IChanBase {
     IChanReceiver<TMsg> chan;
+    Task over;
 
-    event Action<TMsg> ReceivedMessage;
+    event Action<TMsg> ReceivedMessage = x => {};
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Chan.ChanEvent`1"/> class.
@@ -19,19 +20,16 @@ namespace Chan
       if (chan == null)
         throw new ArgumentNullException("chan");
       this.chan = chan;
-      ReceivedMessage = (x => {}) + defaultHandler;
-      startListening();
+      ReceivedMessage += defaultHandler;
+      over = startListening();
     }
 
     public ChanEvent(IChanReceiver<TMsg> chan) : this(chan, null) {
     }
 
-    async void startListening() {
-      //TMsg msg;
+    async Task startListening() {
       try {
         while (true) {      
-          //        Action<TMsg> a = ReceivedMessage;
-          //        await Task.Factory.FromAsync(a.BeginInvoke(msg), a.EndInvoke); //TODO: simulateously receive and invoke
           ReceivedMessage(await chan.ReceiveAsync());
           DebugCounter.Incg(this, "event");
         }
@@ -39,8 +37,18 @@ namespace Chan
         //over
         DebugCounter.Incg(this, "over");
       }
-
+      await chan.Close();
     }
+    #region IChanBase implementation
+    public async Task Close() {
+      await chan.Close();
+      await AfterClosed();
+    }
+
+    public Task AfterClosed() {
+      return over;
+    }
+    #endregion
   }
 }
 
