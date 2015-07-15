@@ -355,6 +355,9 @@ namespace Chan
         Close = 110,
         Ping = 200,
         Pong = 201
+        //future?: possibly add "I want to receive" for better workload distribution
+        // - the ones with more "I want to receive" would get sent more messages
+        // ... this is 2 way communication, though...
       }
     }
   }
