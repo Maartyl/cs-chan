@@ -58,8 +58,12 @@ namespace Chan
       RequestCancel();
     }
 
-    public async Task<T> ReceiveAsync() {
-      return await await world.ReceiveAsync();
+    public Task<T> ReceiveAsync() {
+      return world.ReceiveAsync().Flatten();
+    }
+
+    public Task<T> ReceiveAsync(Func<T, Task> sendResult) {
+      return world.ReceiveAsync(t => t.Bind(sendResult)).Flatten();
     }
 
     protected override async Task CloseOnce() {

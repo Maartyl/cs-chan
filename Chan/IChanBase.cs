@@ -24,6 +24,8 @@ namespace Chan
   public interface IChanReceiver <TMsg> : IChanBase {
     /// Returned task is cancelled if the channel is closed and there will be no more messages.
     Task<TMsg> ReceiveAsync();
+    //this effectively allows piping
+    Task<TMsg> ReceiveAsync(Func<TMsg, Task> sendResult);
   }
 
   public interface IChan<TMsg> : IChanSender<TMsg>, IChanReceiver<TMsg> { 

@@ -23,26 +23,30 @@ namespace Chan
       return Task.Delay(0);
     }
 
-    public async Task AfterClosed() {
-      await await closingTaskPromise.Task;
+    public Task AfterClosed() {
+      return closingTaskPromise.Task.Flatten();
     }
 
     ///after Closing channel: returns if all messages have been "received"
     /// (after close:) after true once, it should never be false again
     protected abstract bool NoMessagesLeft();
 
-    public Task<TMsg> ReceiveAsync() {
+    public Task<TMsg> ReceiveAsync(Func<TMsg, Task> sendCallback) {
       if (Closed)
-        return ReceiveAsyncCancelled(CancelledTask);
-      return ReceiveAsyncImpl();
+        return ReceiveAsyncCancelled(sendCallback, CancelledTask);
+      return ReceiveAsyncImpl(sendCallback);
     }
 
-    protected abstract Task<TMsg> ReceiveAsyncImpl();
+    public Task<TMsg> ReceiveAsync() {
+      return ReceiveAsync(x => Task.Delay(0));
+    }
 
-    protected virtual Task<TMsg> ReceiveAsyncCancelled(Task<TMsg> cancelled) {
+    protected abstract Task<TMsg> ReceiveAsyncImpl(Func<TMsg, Task> sendCallback);
+
+    protected virtual Task<TMsg> ReceiveAsyncCancelled(Func<TMsg, Task> sendCallback, Task<TMsg> cancelled) {
       if (NoMessagesLeft())
         return cancelled;
-      return ReceiveAsyncImpl();
+      return ReceiveAsyncImpl(sendCallback);
     }
 
     public Task SendAsync(TMsg msg) {

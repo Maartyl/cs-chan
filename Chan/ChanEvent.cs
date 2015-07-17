@@ -9,7 +9,7 @@ namespace Chan
     IChanReceiver<TMsg> chan;
     Task over;
 
-    event Action<TMsg> ReceivedMessage = x => {};
+    public event Action<TMsg> ReceivedMessage = x => {};
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Chan.ChanEvent`1"/> class.

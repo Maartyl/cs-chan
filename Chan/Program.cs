@@ -50,28 +50,6 @@ namespace Chan
       //DebugCounter.Glob.Print(Console.Error);
     }
 
-    class QQQ : IChanReceiver<long>, IChanReceiver<int> {
-      #region IChanReceiver implementation
-      Task<int> IChanReceiver<int>.ReceiveAsync() {
-        throw new NotImplementedException();
-      }
-      #endregion
-      #region IChanReceiver implementation
-      Task<long> IChanReceiver<long>.ReceiveAsync() {
-        throw new NotImplementedException();
-      }
-      #endregion
-      #region IChanBase implementation
-      Task IChanBase.Close() {
-        throw new NotImplementedException();
-      }
-
-      Task IChanBase.AfterClosed() {
-        throw new NotImplementedException();
-      }
-      #endregion
-    }
-
     static async Task Rpl() {
       var rT = new TaskCompletionSource< IChanReceiver<string>>();
       var sT = new TaskCompletionSource< IChanSender<string>>();

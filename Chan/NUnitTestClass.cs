@@ -7,21 +7,20 @@ namespace Chan
 {
   [TestFixture()]
   public class ChanSimpleTest {
-    [Test()]
-    public void AllPassedQueued() {
-      AllPassed(new ChanQueued<int>());
-    }
-
-    [Test()]
-    public void AllPassedBuffered() {
-      AllPassed(new ChanQueued<int>(400));
-    }
-
-    [Test()]
-    public void AllPassedBlocking() {
-      AllPassed(new ChanBlocking<int>());
-    }
-
+    //    [Test()]
+    //    public void AllPassedQueued() {
+    //      AllPassed(new ChanQueued<int>());
+    //    }
+    //
+    //    [Test()]
+    //    public void AllPassedBuffered() {
+    //      AllPassed(new ChanQueued<int>(400));
+    //    }
+    //
+    //    [Test()]
+    //    public void AllPassedBlocking() {
+    //      AllPassed(new ChanBlocking<int>());
+    //    }
     [Test()]
     public void AllPassedAsync() {
       AllPassed(new ChanAsync<int>());
@@ -64,22 +63,20 @@ namespace Chan
       Console.WriteLine("sum over");
       return sum;
     }
-
-    [Test()]
-    public void OrderWithSingleInAndOutQueued() {
-      OrderWithSingleInAndOut(new ChanQueued<int>());
-    }
-
-    [Test()]
-    public void OrderWithSingleInAndOutBuffered() {
-      OrderWithSingleInAndOut(new ChanQueued<int>(500));
-    }
-
-    [Test()]
-    public void OrderWithSingleInAndOutBlocking() {
-      OrderWithSingleInAndOut(new ChanBlocking<int>());
-    }
-
+    //    [Test()]
+    //    public void OrderWithSingleInAndOutQueued() {
+    //      OrderWithSingleInAndOut(new ChanQueued<int>());
+    //    }
+    //
+    //    [Test()]
+    //    public void OrderWithSingleInAndOutBuffered() {
+    //      OrderWithSingleInAndOut(new ChanQueued<int>(500));
+    //    }
+    //
+    //    [Test()]
+    //    public void OrderWithSingleInAndOutBlocking() {
+    //      OrderWithSingleInAndOut(new ChanBlocking<int>());
+    //    }
     [Test()]
     public void OrderWithSingleInAndOutAsync() {
       OrderWithSingleInAndOut(new ChanAsync<int>());

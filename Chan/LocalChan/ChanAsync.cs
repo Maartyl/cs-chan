@@ -5,11 +5,11 @@ using System.Collections.Concurrent;
 namespace Chan
 {
   public class ChanAsync<T> : Chan<T> {
-    readonly BlockingCollection<TaskCompletionSource<T>> promises;
+    readonly BlockingCollection<TaskCompletionCallback<T, Task>> promises;
     readonly BlockingCollection<DeliverAsync<T>> waiters;
 
     public ChanAsync(int receiveTaskCountLimit, int sendTaskCountLimit) { 
-      promises = new BlockingCollection<TaskCompletionSource<T>>(receiveTaskCountLimit);
+      promises = new BlockingCollection<TaskCompletionCallback<T, Task>>(receiveTaskCountLimit);
       waiters = new BlockingCollection<DeliverAsync<T>>(sendTaskCountLimit);
     }
 
@@ -20,26 +20,26 @@ namespace Chan
       return waiters.Count == 0;
     }
 
-    protected override Task<T> ReceiveAsyncImpl() {
+    protected override Task<T> ReceiveAsyncImpl(Func<T, Task> sendCallback) {
       DeliverAsync<T> da;
       lock (waiters)
         if (waiters.TryTake(out da)) {
           DebugCounter.Incg(this, "r.w");
-          return Task.FromResult(da.Deliver());
+          return Task.FromResult(da.Deliver(sendCallback));
         } else {
           DebugCounter.Incg(this, "r.p");
-          var p = new TaskCompletionSource<T>();
+          var p = new TaskCompletionCallback<T, Task>(sendCallback);
           promises.Add(p);
           return p.Task;
         }
     }
 
-    protected override Task<T> ReceiveAsyncCancelled(Task<T> cancelled) {
+    protected override Task<T> ReceiveAsyncCancelled(Func<T, Task> sendCallback, Task<T> cancelled) {
       DeliverAsync<T> da;
       lock (waiters)
         if (waiters.TryTake(out da)) {
           DebugCounter.Incg(this, "c.w");
-          return Task.FromResult(da.Deliver());
+          return Task.FromResult(da.Deliver(sendCallback));
         } else {
           DebugCounter.Incg(this, "c.c");
           return cancelled;
@@ -47,12 +47,11 @@ namespace Chan
     }
 
     protected override Task SendAsyncImpl(T msg) {
-      TaskCompletionSource<T> p;
+      TaskCompletionCallback<T, Task> p;
       lock (waiters)
         if (promises.TryTake(out p)) {
           DebugCounter.Incg(this, "s.p");
-          p.SetResult(msg);
-          return Task.Delay(0);
+          return p.SetResult(msg);
         } else {
           DebugCounter.Incg(this, "s.w");
           return DeliverAsync.Start(msg, waiters.Add);
@@ -68,7 +67,7 @@ namespace Chan
       while (!NoMessagesLeft())
         await Task.Delay(waitTime = (int) (waitTime * 1.8));
 
-      TaskCompletionSource<T> p; //cancel all promises that cannot be delivered
+      TaskCompletionCallback<T, Task> p; //cancel all promises that cannot be delivered
       while (promises.TryTake(out p)) {
         DebugCounter.Incg(this, "e.p");
         p.SetCanceled();

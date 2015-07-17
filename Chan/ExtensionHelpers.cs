@@ -15,6 +15,14 @@ namespace Chan
     internal static string Format(this string s, params object[] args) {
       return string.Format(s, args);
     }
+
+    internal static IChanReceiver<T> GetReceiver<T>(this IChanFactory<Nothing> f) {
+      return f.GetReceiver<T>(null); //null == only value of Nothing
+    }
+
+    internal static IChanSender<T> GetSender<T>(this IChanFactory<Nothing> f) {
+      return f.GetSender<T>(null); //null == only value of nothing
+    }
   }
 }
 

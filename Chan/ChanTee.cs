@@ -28,12 +28,8 @@ namespace Chan
     async Task startListening() {
       //TMsg msg;
       try {
-        while (true) {      
-          var msg = await chanIn.ReceiveAsync();
-          var cT = chanOut.SendAsync(msg);
-          Message(msg);
-          await cT;
-        }
+        while (true)       
+          Message(await chanIn.ReceiveAsync(chanOut.SendAsync));
       } catch (TaskCanceledException) {
         //over (either side closed)
       }
@@ -43,6 +39,10 @@ namespace Chan
     #region IChanReceiver implementation
     public Task<T> ReceiveAsync() {
       return chanOut.ReceiveAsync();
+    }
+
+    public Task<T> ReceiveAsync(Func<T, Task> sendCallback) {
+      return chanOut.ReceiveAsync(sendCallback);
     }
     #endregion
     #region IChanBase implementation

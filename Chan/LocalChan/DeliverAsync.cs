@@ -6,18 +6,18 @@ namespace Chan
   /// like DeliverBarrier but async
   public class DeliverAsync<T> {
     readonly T data;
-    readonly TaskCompletionSourceEmpty t = new TaskCompletionSourceEmpty();
+    readonly TaskCompletionSource<Task> t = new TaskCompletionSource<Task>();
 
     DeliverAsync(T data) {
       this.data = data;
     }
 
-    public T Deliver() {
-      t.SetCompleted();
+    public T Deliver(Func<T, Task> sendCallback) {
+      t.SetResult(sendCallback(data));
       return data;
     }
 
-    public Task Task { get { return t.Task; } }
+    public Task Task { get { return t.Task.Flatten(); } }
 
     public static Task Start(T data, Action<DeliverAsync<T>> register) { 
       var da = Create(data);

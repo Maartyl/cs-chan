@@ -70,6 +70,11 @@
     <Compile Include="ChanTee.cs" />
     <Compile Include="INetChanProvider.cs" />
     <Compile Include="IChanFactory.cs" />
+    <Compile Include="Chan.cs" />
+    <Compile Include="ExceptionDrain.cs" />
+    <Compile Include="NetChan\NetChanServer.cs" />
+    <Compile Include="TaskCompletionCallback.cs" />
+    <Compile Include="TaskHelpers.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
