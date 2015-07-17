@@ -60,8 +60,6 @@
     <Compile Include="NetChan\NetChanTBase.cs" />
     <Compile Include="LocalChan\Chan.cs" />
     <Compile Include="LocalChan\ChanAsync.cs" />
-    <Compile Include="LocalChan\ChanBlocking.cs" />
-    <Compile Include="LocalChan\ChanQueued.cs" />
     <Compile Include="LocalChan\DeliverAsync.cs" />
     <Compile Include="LocalChan\DeliverBarrier.cs" />
     <Compile Include="ChanEvent.cs" />
