@@ -8,7 +8,6 @@
     <ProjectGuid>{2D9D6E78-B407-4F7A-9E35-7550E7AD910A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>WCFTests</RootNamespace>
-    <AssemblyName>WCFTests</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +19,7 @@
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+    <AssemblyName>WCFTests</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>full</DebugType>
@@ -29,6 +29,13 @@
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+    <AssemblyName>WCFTests</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Trace|AnyCPU' ">
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Trace</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <AssemblyName>WCFTestsGreeter</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

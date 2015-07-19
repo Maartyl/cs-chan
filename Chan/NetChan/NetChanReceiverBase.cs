@@ -15,11 +15,15 @@ namespace Chan
 
     protected async Task StartReceiver() {
       //... only responds; no other autonom action (like sender)
+      DbgCns.Trace(this, "start-rec0");
       await ReceiveLoop();
+      DbgCns.Trace(this, "start-rec1");
       await Close();
+      DbgCns.Trace(this, "start-recE");
     }
 
     protected override async Task<Header> OnMsgReceived(Header h) {
+      DbgCns.Trace(this, "on-msg0");
       if (h.HasNextFragment)
         throw new NotSupportedException("fragmented messages (>64KB) are not suppoed");
       var msgSize = h.Length;
@@ -38,7 +42,9 @@ namespace Chan
         await world.SendAsync(Task.FromResult(msg));
         await SendSimple(Header.AckFor(h)); //inform sender that msg has been received fine
         await Flush();
+        DbgCns.Trace(this, "on-msg-ack-sent");
       } catch (Exception ex) {
+        DbgCns.Trace(this, "on-msg-EX", ex.Message);
         failed = ex;
       }
       if (failed != null) {
@@ -54,6 +60,7 @@ namespace Chan
     }
 
     protected override async Task OnCloseReceived(Header h) {
+      DbgCns.Trace(this, "on-close");
       await world.Close();
       RequestCancel();
     }
@@ -67,8 +74,10 @@ namespace Chan
     }
 
     protected override async Task CloseOnce() {
+      DbgCns.Trace(this, "close-once0");
       await SendSimple(Header.Close);
       await Flush();
+      DbgCns.Trace(this, "close-onceE");
     }
   }
 }

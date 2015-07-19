@@ -3,6 +3,7 @@ using System;
 
 namespace Chan
 {
+  ///only handles first exception
   public class ExceptionDrain {
     TaskCompletionSourceEmpty p = new TaskCompletionSourceEmpty();
 

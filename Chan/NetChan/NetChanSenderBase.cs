@@ -13,6 +13,7 @@ namespace Chan
     }
 
     protected async Task StartSender() {
+      DbgCns.Trace(this, "start-sender0");
       var receiverT = ReceiveLoop();
       var senderT = PipeWorldSend();
       Exception failed = null;
@@ -21,8 +22,10 @@ namespace Chan
         await Task.WhenAny(receiverT, senderT);
         //if senderT is first (channel got closed): there still could be exception in receiver / could go on forever...
         // - cancellation token? - crazy distribution / inst.member
+        DbgCns.Trace(this, "start-sender1");
       } catch (Exception ex) {
         failed = ex;
+        DbgCns.Trace(this, "start-sender-EX");
       }
       if (failed != null) {
         //continue catch clause outside of it: cannot contain await (sadly without rethrow)
@@ -30,11 +33,14 @@ namespace Chan
         //TODO: cleanup
         throw failed;
       }
-     
+      DbgCns.Trace(this, "start-senderE1");
       await Close();
+      await Task.WhenAll(receiverT, senderT);
+      DbgCns.Trace(this, "start-senderE2");
     }
 
     protected Task SendMsg(T msg) {
+      DbgCns.Trace(this, "send0");
       ushort length;
       var buff = sendBuffer; //in case someone changes the buffer
       bool couldReuseBuffer; //thanks to this: sends from 0: SendBytes will shift the data while merging
@@ -46,6 +52,7 @@ namespace Chan
         length = (ushort) ms.Position; //actually used count
         couldReuseBuffer = true;
         DebugCounter.Incg(this, "ser-fast");
+        DbgCns.Trace(this, "send-fast", length.ToString());
       } catch (NotSupportedException) {
         //buffer too short: do again, able to resize and change buffer to created new: bigger
         //sadly: needs to shift: written from beginning
@@ -63,6 +70,7 @@ namespace Chan
         buff = ms.GetBuffer();
         couldReuseBuffer = false;
         DebugCounter.Incg(this, "ser-slow");
+        DbgCns.Trace(this, "send-slow", length.ToString());
       }
       if (sendBuffer.Length < buff.Length)
         sendBuffer = buff;
@@ -70,6 +78,7 @@ namespace Chan
     }
 
     protected async Task PipeWorldSend() {
+      DbgCns.Trace(this, "pipe0");
       //assures there are no 2 messages being sent at the same time
       // - could happen if sending was accesible directly
       try {
@@ -77,26 +86,30 @@ namespace Chan
           var derT = world.ReceiveAsync(); 
           if (!derT.IsCompleted) //next message is not immediately available
             await Flush(); //TODO: assume Flush can fail: either just cancel cur or: list of all not flushed... 
-
           var der = await derT;
+          DbgCns.Trace(this, "pipe1");
           try { 
             await SendMsg(der.Data);
             der.SetCompleted();
           } catch (Exception ex) { 
+            DbgCns.Trace(this, "pipe-EX", ex.Message);
             der.SetException(ex);
             throw; //should I kill the whole thing? ... probably
           }
         }
       } catch (TaskCanceledException) {
+        DbgCns.Trace(this, "pipeE0");
         //ok done: send close
         //any other exception will propagate: not calling CLOSE
       }
       await SendSimple(Header.Close);
       await Flush();
+      DbgCns.Trace(this, "pipeE");
     }
 
     protected async Task CancelWorld(Exception ex) {
       //exception happened: all senders fail
+      DbgCns.Trace(this, "cw0");
       var endT = world.Close();
       try {
         while (true)
@@ -105,13 +118,16 @@ namespace Chan
         //end of all senders: world is closed: no more can appear
       }
       await endT;
+      DbgCns.Trace(this, "cwE");
     }
     #region implemented abstract members of NetChanBase
     protected override Task<Header> OnMsgReceived(Header h) {
+      DbgCns.Trace(this, "on-msg");
       throw new InvalidOperationException("MSG received in Sender");
     }
 
     protected override async Task OnCloseReceived(Header h) {
+      DbgCns.Trace(this, "on-close");
       //receiver requested no more messages
       //-> close from outside: when all done, send CLOSE anyway (actual close: receiver doesn't know when end)
 
@@ -127,15 +143,20 @@ namespace Chan
     #endregion
     public async Task SendAsync(T msg) {
       //this task finshes when message has been succesfully sent: not received
+      DbgCns.Trace(this, "senda0");
       var der = new DataWithErrorInfo(msg);
       await world.SendAsync(der);
+      DbgCns.Trace(this, "senda1");
       await der.Task;
+      DbgCns.Trace(this, "sendaE");
       //whenAll would never finish if world.send got canceled
     }
 
     protected override async Task CloseOnce() {
+      DbgCns.Trace(this, "close0");
       await world.Close();
       RequestCancel();
+      DbgCns.Trace(this, "closeE");
       //close world; call virtual cleanup
       //DON'T send CLOSE : it will be called once PipeWorlSend completes: after read all from world
       // ... this is probably really all I need...

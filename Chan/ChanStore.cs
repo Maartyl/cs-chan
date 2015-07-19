@@ -38,7 +38,9 @@ namespace Chan
       netChanProviderHost.Close();
     }
     #endregion
+    #region creation 
     public Task CreateLocalChan<T>(string name, ChanDistributionType type = ChanDistributionType.FirstOnly) {
+      //TODO: normalize name
       if (locals.Keys.Contains(name))
         throw new ArgumentException("chan with given name already exists");
       var c = new ChanAsync<T>();
@@ -47,6 +49,7 @@ namespace Chan
     }
 
     public Task CreateNetChan<T>(string name, NetChanConfig cfg, ChanDistributionType type = ChanDistributionType.FirstOnly) {
+      //TODO: normalize name
       if (locals.Keys.Contains(name))
         throw new ArgumentException("chan with given name already exists");
       var dtf = Chan.FactoryFor<T>(type);
@@ -54,30 +57,24 @@ namespace Chan
       locals.Add(name, box);
       return box.Server.AfterClosed();
     }
-    //    public void RegisterReceiver<T>(Uri chanUri, IChanReceiver<T> chan) {
-    //      ChanUriValidation(chanUri);
-    //      if (chan == null)
-    //        throw new ArgumentNullException("chan");
-    //      if (chanUri.Authority != "")
-    //        throw new ArgumentException("can only register local chans (is: {0})".Format(chanUri));
-    //
-    //      locals.Add(chanUri.AbsolutePath, chan);
-    //    }
-    static TR GetWrongTypeThrow<T, TR>(Type actualGenericType) {
+    #endregion
+    static TR GetWrongTypeThrow<T, TR>(Type actualGenericType) { 
       throw new ArgumentException("wrong chan type({0}); actual: {1}".Format(
         typeof(T), actualGenericType.Name));
     }
 
     IChanReceiver<T> GetLocalReceiver<T>(string chanName) {
-      ChanBox box; //null if not exists; wrong type: exception
-      return !locals.TryGetValue(chanName, out box) ? null 
-        : box.Chan.GetReceiver<T>() ?? GetWrongTypeThrow<T, IChanReceiver<T>>(box.Chan.GenericType);
+      return GetLocalGeneric<T,IChanReceiver<T>>(chanName, Exts.GetReceiver<T>);
     }
 
     IChanSender<T> GetLocalSender<T>(string chanName) {
+      return GetLocalGeneric<T,IChanSender<T>>(chanName, Exts.GetSender<T>);
+    }
+
+    TC GetLocalGeneric<T, TC>(string chanName, Func<IChanFactory<Nothing>, TC> getChan) where TC : class {
       ChanBox box; //null unless exists; wrong type: exception
       return !locals.TryGetValue(chanName, out box) ? null 
-        : box.Chan.GetSender<T>() ?? GetWrongTypeThrow<T, IChanSender<T>>(box.Chan.GenericType);
+        : getChan(box.Chan) ?? GetWrongTypeThrow<T, TC>(box.Chan.GenericType);
     }
 
     public IChanReceiver<T> GetReceiver<T>(Uri chanUri) {
@@ -124,15 +121,56 @@ namespace Chan
       return unchecked((uint) new Random().Next());
     }
 
+    NetChanConnectionInfo RequestFinish(Action<TcpClient, uint> register, NetChanServer srv) { 
+      //register is either (server) .StartSender or .StartReceiver
+      int port; //set by listener to some open port
+      var key = RandomKey();
+      srv.CollectServerConnectedTask(//completes when client connected and NetChan created
+        OpenNetChanServer(NetChanListen(out port), key, register));
+
+      return new NetChanConnectionInfo { 
+        Key = key, Port = port, Type = srv.Type
+      };
+    }
+
+    NetChanServer RequestStart(Uri chanName) {
+      //determine - this part is mostly checks; starting server is in RequestFinish
+      //checks... - thinking back: why uri? = oh, for potential future args, ok
+      // - it has to be a local uri
+      ChanUriValidation(chanName);
+      if (chanName.Authority != "")
+        throw new ArgumentException("Only local uri can be requested. (is: {0})".Format(chanName));
+      ChanBox box;
+      if (!locals.TryGetValue(chanName.AbsolutePath, out box)) 
+        throw new KeyNotFoundException("No chan registered under: {0}".Format(chanName.AbsolutePath as object));
+      if (!box.IsNetChan)
+        throw new ArgumentException("Requested chan is only locally accessible. ({0})"
+                                    .Format(chanName.AbsolutePath as object));
+      return box.Server;
+    }
+
+    NetChanConnectionInfo Request(Uri chanName, Func<NetChanServer,Action<TcpClient, uint>> starter) {
+      try {
+        var s = RequestStart(chanName);
+        return RequestFinish(starter(s), s);
+      } catch (Exception ex) {
+        return new NetChanConnectionInfo { 
+          ErrorCode = ex.HResult,
+          ErrorMessage = ex.Message,
+          ErrorType = ex.GetType().FullName
+        };
+      }
+    }
+
     NetChanConnectionInfo INetChanProvider.RequestSender(Uri chanName) {
-      throw new NotImplementedException();
+      return Request(chanName, x => x.StartSender);
     }
 
     NetChanConnectionInfo INetChanProvider.RequestReceiver(Uri chanName) {
-      throw new NotImplementedException();
+      return Request(chanName, x => x.StartReceiver);
     }
     #endregion
-    protected class ChanBox {
+    protected sealed class ChanBox {
       public IChanFactory<Nothing> Chan{ get; private set; }
 
       public NetChanServer Server{ get; private set; }
@@ -148,14 +186,13 @@ namespace Chan
       public bool IsNetChan{ get { return Server != null; } }
     }
 
-    private T FromChanCrossPair<T, TM, TL, TR>(Func<IChanReceiver<TM>, IChanSender<TM>, TL> fl,
-                                               Func<IChanReceiver<TM>, IChanSender<TM>, TR> fr,
-                                               Func<TL, TR, T> f) {
-      var c1 = new ChanAsync<TM>();
+    ///cross-wires 2 channels: returning 2 values through a merging function
+    T FromChanCrossPair<T, TM, TL, TR>(Func<IChanReceiver<TM>, IChanSender<TM>, TL> fl,
+                                       Func<IChanReceiver<TM>, IChanSender<TM>, TR> fr,
+                                       Func<TL, TR, T> f) {
+      var c1 = new ChanAsync<TM>(); 
       var c2 = new ChanAsync<TM>();
       return f(fl(c1, c2), fr(c2, c1));
-      //(defn from-chan-cross-pair [fl fr f] (let [c1 (ChanAsync.) c2 (ChanAsync.)] (f (fl c1 c2) (fr c2 c1))))
-      // #let a 5 (+ 7 a)
     }
   }
 

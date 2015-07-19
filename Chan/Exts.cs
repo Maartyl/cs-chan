@@ -3,7 +3,8 @@ using System;
 
 namespace Chan
 {
-  internal static class ExtensionHelpers {
+  //extension helpers
+  internal static class Exts {
     internal static string Format(this string s, object a) {
       return string.Format(s, a);
     }

@@ -22,6 +22,7 @@ namespace Client
 
         Console.WriteLine("Service response: " + client.Greet(name));
       }
+      client.Close();
     }
   }
 }

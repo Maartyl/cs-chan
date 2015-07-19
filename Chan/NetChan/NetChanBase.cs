@@ -33,25 +33,31 @@ namespace Chan
     }
 
     protected async Task HandshakeServer(uint key) {
+      DbgCns.Trace(this, "handshake-srv0");
       var h = await ReceiveHeader();
       if (h.OpCode == Header.Op.Open) {
         if (h.Key != key) {
+          DbgCns.Trace(this, "handshake-srv-wrong-key", key + "/" + h.Key);
           await SendError("wrong key");
           //TODO: decide: safe to put keys in err msg? - it's just something random...
           throw new AccessViolationException("expected and provided key don't match (Expected: " + key + ", Got:" + h.Key + ")");
         }
         await SendSimple(Header.AckFor(h));
         await Flush();
+        DbgCns.Trace(this, "handshake-srv1");
       } else {
+        DbgCns.Trace(this, "handshake-srv-EX", "" + h.OpCode);
         await SendError("expected OPEN");
         throw new InvalidOperationException("expected OPEN; got: " + h.OpCode);
       }
     }
 
     protected async Task HandshakeClient(uint key) {
+      DbgCns.Trace(this, "handshake-clnt0");
       await SendSimple(new Header(Header.Op.Open) { Key=key });
       await Flush();
       var hResponse = await ReceiveHeader();
+      DbgCns.Trace(this, "handshake-clnt1");
 
       if (hResponse.OpCode == Header.Op.Ack) 
         return;
@@ -87,26 +93,31 @@ namespace Chan
             break;
             case Header.Op.Close:
               await OnCloseReceived(h);
+              DbgCns.Trace(this, "r-loop-close");
               return;
             case Header.Op.Err:
               await OnErrReceived(h);
+              DbgCns.Trace(this, "r-loop-err");
               return;
             default:
               h = await OnDefaultReceived(h);
             break;
           //TODO: add OnEndReceived
           }
-      } catch (TaskCanceledException ex) {
+      } catch (TaskCanceledException) {
+        DbgCns.Trace(this, "r-loop-cancel");
         //not sure how to return something cancelled...
         // - maybe not catch?
         // - Do I want that? Or do I want to end fine?
         // - Has canceled receiving ended fine?
       }
+
     }
 
     protected abstract Task<Header> OnMsgReceived(Header h);
 
     protected async Task<Header> OnPingReceived(Header h) {
+      DbgCns.Trace(this, "on-ping");
       var hNext = ReceiveHeader();
       await SendSimple(Header.Pong);
       await Flush();
@@ -114,6 +125,7 @@ namespace Chan
     }
 
     protected Task<Header> OnPongReceived(Header h) {
+      DbgCns.Trace(this, "on-pong");
       pongReceived = true;
       return ReceiveHeader();
     }
@@ -137,6 +149,7 @@ namespace Chan
     protected abstract Task OnCloseReceived(Header h);
 
     protected async Task OnErrReceived(Header h) {
+      DbgCns.Trace(this, "on-err0");
       var msgLen = h.Length;
       if (receiveBuffer.Length < msgLen)
         receiveBuffer = new byte[msgLen];
@@ -150,6 +163,7 @@ namespace Chan
 
       await msgT;
       var msgStr = System.Text.Encoding.UTF8.GetString(buff, 0, msgLen);
+      DbgCns.Trace(this, "on-err1", msgStr);
       throw new RemoteException(msgStr);
     }
 
@@ -204,10 +218,12 @@ namespace Chan
     }
     //continuously sends pings
     protected async Task PingLoop(CancellationToken ctkn) {
+      DbgCns.Trace(this, "ping-loop0");
       try {
         await Task.Delay(pingDelayMs, ctkn);
         while (pongReceived) {
           pongReceived = false;
+          DbgCns.Trace(this, "ping-loop");
 
           var delay = Task.Delay(pingDelayMs, ctkn);
           await SendSimple(Header.Ping);
@@ -215,9 +231,11 @@ namespace Chan
           await delay;
         }
       } catch (TaskCanceledException) {
+        DbgCns.Trace(this, "ping-loop-end-ok");
         return; //ok end
       }
       RequestCancel();
+      DbgCns.Trace(this, "ping-loop-timeout");
       throw new TimeoutException("PING: no PONG received");
     }
 

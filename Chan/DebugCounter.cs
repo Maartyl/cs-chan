@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,6 +8,7 @@ namespace Chan
 {
   public class DebugCounter {
     Dictionary<string, Dictionary<string, int>> data = new Dictionary<string, Dictionary<string, int>>();
+    List<KeyValuePair<string,string>> log = new List<KeyValuePair<string, string>>();
 
     [System.Diagnostics.Conditional("DEBUG")]
     public void Inc(string obj, string prop) {
@@ -42,7 +44,7 @@ namespace Chan
     }
 
     public void Print(TextWriter w) {
-      w.WriteLine("---");
+      w.WriteLine("{---");
       lock (data) {
         foreach (var kv in data) {
           w.WriteLine(kv.Key + ":");
@@ -50,11 +52,20 @@ namespace Chan
             w.WriteLine("\t" + pv.Key + ": " + pv.Value);
         }
       }
+      if (log.Count != 0) {
+        w.WriteLine("----");
+        lock (log)
+          foreach (var l in log.Take(500)) 
+            w.WriteLine(l.Key + ": " + l.Value);
+      }
+      w.WriteLine("}---");
     }
 
     public void Clear() {
       lock (data)
         data.Clear();
+      lock (log)
+        log.Clear();
     }
 
     public void Clear(string obj) {
@@ -64,7 +75,7 @@ namespace Chan
           objData.Clear(); 
     }
 
-    public static DebugCounter Glob = new DebugCounter();
+    public static readonly DebugCounter Glob = new DebugCounter();
 
     [System.Diagnostics.Conditional("DEBUG")]
     public static void Incg(string obj, string prop) {

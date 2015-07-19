@@ -9,6 +9,7 @@ namespace Chan
 {
   public class MainClass {
     public static void Main(string[] args) {
+      DbgCns.Trace("start", "main");
       //var ctknSrc = new CancellationTokenSource();
       //PeriodicCheckDebugCounter(ctknSrc.Token);
 
@@ -51,26 +52,38 @@ namespace Chan
     }
 
     static async Task Rpl() {
-      var rT = new TaskCompletionSource< IChanReceiver<string>>();
-      var sT = new TaskCompletionSource< IChanSender<string>>();
+      DbgCns.Trace("rpl", "0");
+      var rT = new TaskCompletionSource<IChanReceiver<string>>();
+      var sT = new TaskCompletionSource<IChanSender<string>>();
       var nT = InitNet(rT, sT);
+      DbgCns.Trace("rpl", "1");
       new ChanEvent<String>(await rT.Task, Console.WriteLine);
-      await Task.WhenAny(nT, exec(await sT.Task));
+      DbgCns.Trace("rpl", "2");
+      await Task.WhenAll(nT, exec(await sT.Task));
+      DbgCns.Trace("rpl", "E");
     }
 
     static async Task exec(IChanSender<String> cs) {
+      DbgCns.Trace("exec", "0");
       await cs.SendAsync("Hello");
+      DbgCns.Trace("exec", "1");
       await cs.SendAsync("from");
+      DbgCns.Trace("exec", "2");
       await cs.SendAsync("async channel");
       string s;
-      while ((s = Console.ReadLine()) != null)
+      while ((s = Console.ReadLine()) != null) {
+        DbgCns.Trace("exec", "kb-send", s);
         await cs.SendAsync(s);
+      }
+      DbgCns.Trace("exec", "C");
       await cs.Close();
+      DbgCns.Trace("exec", "E0");
       try {
         await cs.SendAsync("this should not be shown");
       } catch (TaskCanceledException) {
         Console.WriteLine("correctly thrown cancelled");
       }
+      DbgCns.Trace("exec", "E");
     }
 
     static async void PeriodicCheckDebugCounter(CancellationToken ctkn) {
@@ -85,6 +98,7 @@ namespace Chan
     }
 
     static async Task InitNet<T>(TaskCompletionSource<IChanReceiver<T>> chanR, TaskCompletionSource< IChanSender<T>> chanS) {
+      DbgCns.Trace("init", "0");
       TaskCompletionSource<TcpClient> serverTcpPromise = new TaskCompletionSource<TcpClient>();
       TcpListener l = new TcpListener(IPAddress.Any, 7896);
       l.Start();
@@ -97,7 +111,7 @@ namespace Chan
       var clientTcp = new TcpClient("localhost", 7896);
       var serverTcp = await serverTcpPromise.Task;
       l.Stop();
-
+      DbgCns.Trace("init", "tcp-connected");
       var cfgIn = new NetChanConfig<T>() {
         In = clientTcp.GetStream(),
         Out = clientTcp.GetStream(),
@@ -116,9 +130,12 @@ namespace Chan
       var r = new NetChanReceiverClient<T>(cfgIn);
       chanR.SetResult(r);
       chanS.SetResult(s);
+      DbgCns.Trace("init", "results");
       var sT = s.Start(42);
       var rT = r.Start(42);
+      DbgCns.Trace("init", "started");
       await Task.WhenAll(sT, rT);
+      DbgCns.Trace("init", "E");
     }
   }
 }

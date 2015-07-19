@@ -1,18 +1,11 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/ChanStore.cs">
-    <Files>
-      <File FileName="Chan/NetChan/NetChanBase.cs" Line="1" Column="1" />
-      <File FileName="Chan/ChanStore.cs" Line="4" Column="15" />
-    </Files>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Trace" />
+  <MonoDevelop.Ide.Workbench>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="Chan" expanded="True" selected="True">
-            <Node name="NetChan" expanded="True" />
-          </Node>
-          <Node name="TestTcp" expanded="True" />
-          <Node name="UnixDbg" expanded="True" />
+          <Node name="Chan" expanded="True" />
+          <Node name="UnixDbg" selected="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
@@ -23,9 +16,6 @@
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
         <State expanded="True" selected="True" />
-      </Pad>
-      <Pad Id="ConnectionManagerPad">
-        <State selected="True" />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

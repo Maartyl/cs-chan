@@ -23,9 +23,13 @@ namespace Chan
     //---
     public string ErrorMessage{ get; internal set; }
 
+    ///if error == exception: the name of the type of the exception
+    public string ErrorType{ get; internal set; }
+
+    ///if error == exception: .HResult
     public int ErrorCode{ get; internal set; }
 
-    public bool IsOk{ get { return ErrorCode == 0 && ErrorMessage == null; } }
+    public bool IsOk{ get { return ErrorCode == 0 && ErrorMessage == null && ErrorType == null; } }
   }
 }
 

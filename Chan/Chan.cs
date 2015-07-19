@@ -4,17 +4,18 @@ using System;
 namespace Chan
 {
   public static class Chan {
-    //problem with pipeing: exceptions are not propagated, instead thrown in this task
     //this completes with close of either first (cancel) or both (if propagates) channels.
-    public static Task Pipe<T>(this IChanReceiver<T> rchan, IChanSender<T> schan, bool propagateClose = true) {
-      return Pipe(rchan, schan, x => x, propagateClose);
+    public static Task Pipe<T>(this IChanReceiver<T> rchan, IChanSender<T> schan, bool propagateClose = true, Action<T> tee = null) {
+      return Pipe(rchan, schan, x => x, propagateClose, tee);
     }
 
     public static async Task Pipe<TR, TS>(this IChanReceiver<TR> rchan, IChanSender<TS> schan,
-                                          Func<TR,TS> fmap, bool propagateClose = true) {
+                                          Func<TR,TS> fmap, bool propagateClose = true, Action<TR> tee = null) {
+      if (tee == null)
+        tee = x => {};
       try {
         while (true)
-          await rchan.ReceiveAsync(v => schan.SendAsync(fmap(v)));
+          tee(await rchan.ReceiveAsync(v => schan.SendAsync(fmap(v))));
       } catch (TaskCanceledException) {
         //pass
       }

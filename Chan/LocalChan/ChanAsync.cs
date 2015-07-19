@@ -25,9 +25,11 @@ namespace Chan
       lock (waiters)
         if (waiters.TryTake(out da)) {
           DebugCounter.Incg(this, "r.w");
+          DbgCns.Trace(this, "r.w");
           return Task.FromResult(da.Deliver(sendCallback));
         } else {
           DebugCounter.Incg(this, "r.p");
+          DbgCns.Trace(this, "r.p");
           var p = new TaskCompletionCallback<T, Task>(sendCallback);
           promises.Add(p);
           return p.Task;
@@ -39,9 +41,11 @@ namespace Chan
       lock (waiters)
         if (waiters.TryTake(out da)) {
           DebugCounter.Incg(this, "c.w");
+          DbgCns.Trace(this, "c.w");
           return Task.FromResult(da.Deliver(sendCallback));
         } else {
           DebugCounter.Incg(this, "c.c");
+          DbgCns.Trace(this, "c.c");
           return cancelled;
         }
     }
@@ -51,14 +55,17 @@ namespace Chan
       lock (waiters)
         if (promises.TryTake(out p)) {
           DebugCounter.Incg(this, "s.p");
+          DbgCns.Trace(this, "s.p");
           return p.SetResult(msg);
         } else {
           DebugCounter.Incg(this, "s.w");
+          DbgCns.Trace(this, "s.w");
           return DeliverAsync.Start(msg, waiters.Add);
         }
     }
 
     protected async override Task CloseOnce() {
+      DbgCns.Trace(this, "close-once0");
       //await Task.Yield();
       waiters.CompleteAdding();
 
@@ -72,6 +79,7 @@ namespace Chan
         DebugCounter.Incg(this, "e.p");
         p.SetCanceled();
       }
+      DbgCns.Trace(this, "close-onceE");
     }
     #endregion
   }

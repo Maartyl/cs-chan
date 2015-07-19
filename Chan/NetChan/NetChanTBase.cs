@@ -32,7 +32,9 @@ namespace Chan
     protected abstract Task CloseOnce();
 
     public async Task AfterClosed() {
+      DbgCns.Trace(this, "after-closed0");
       await await closingTaskPromise.Task;
+      DbgCns.Trace(this, "after-closedE");
     }
   }
 }
