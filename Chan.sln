@@ -143,7 +143,7 @@ Global
 		$18.Name = ReadOnly Fields
 		$18.AffectedEntity = ReadonlyField
 		$18.VisibilityMask = Protected, Public
-		$18.NamingStyle = PascalCase
+		$18.NamingStyle = CamelCase
 		$18.IncludeInstanceMembers = True
 		$18.IncludeStaticEntities = False
 		$4.NamingRule = $19

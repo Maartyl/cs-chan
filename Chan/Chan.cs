@@ -4,6 +4,15 @@ using System;
 namespace Chan
 {
   public static class Chan {
+
+    ///cross-wires 2 channels: returning 2 values through a merging function
+    public static T FromChanCrossPair<T, TM, TL, TR>(Func<IChanReceiver<TM>, IChanSender<TM>, TL> fl,
+                                                     Func<IChanReceiver<TM>, IChanSender<TM>, TR> fr,
+                                                     Func<TL, TR, T> f) {
+      var c1 = new ChanAsync<TM>(); 
+      var c2 = new ChanAsync<TM>();
+      return f(fl(c1, c2), fr(c2, c1));
+    }
     //this completes with close of either first (cancel) or both (if propagates) channels.
     public static Task Pipe<T>(this IChanReceiver<T> rchan, IChanSender<T> schan, bool propagateClose = true, Action<T> tee = null) {
       return Pipe(rchan, schan, x => x, propagateClose, tee);

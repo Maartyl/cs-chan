@@ -86,6 +86,8 @@
     <Compile Include="ConnectionCache.cs" />
     <Compile Include="InvokeOnceEmbeddable.cs" />
     <Compile Include="NetChanProviderClient.cs" />
+    <Compile Include="NetChanClientCache.cs" />
+    <Compile Include="NetChan\NetChanClient.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -14,6 +14,10 @@ namespace Chan
     public int InitialSendBufferSize{ get; set; }
 
     public int PingDelayMs { get; set; }
+
+    public bool PropagateCloseFromSender{ get; set; }
+
+    public bool PropagateCloseFromReceiver{ get; set; }
     //public int MembraneBufferSize { get; set; } //for world
   }
 
@@ -30,6 +34,19 @@ namespace Chan
       //no need to specify SerDes for serializable types
       get { return serDes ?? BinarySerDesForSerializable<T>.SerDes;}
       set { serDes = value;}
+    }
+
+    public NetChanConfig<T> Clone(Stream inS = null, Stream outS = null) {
+      return new NetChanConfig<T> { 
+        InitialReceiveBufferSize = InitialReceiveBufferSize,
+        InitialSendBufferSize = InitialSendBufferSize,
+        PingDelayMs = PingDelayMs,
+        SerDes = serDes,
+        PropagateCloseFromSender = PropagateCloseFromSender,
+        PropagateCloseFromReceiver = PropagateCloseFromReceiver,
+        In = inS ?? In,
+        Out = outS ?? Out
+      };     
     }
   }
 }

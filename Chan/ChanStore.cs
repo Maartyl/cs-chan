@@ -15,6 +15,8 @@ namespace Chan
   public class ChanStore : INetChanProvider {
     Dictionary<string, ChanBox> locals = new Dictionary<string, ChanBox>();
     ServiceHost netChanProviderHost;
+    int connectingServerTimeout = 30 * 1000;
+    int connectionClientTimeout = 40 * 1000;
 
     public ChanStore() {
       netChanProviderHost = new ServiceHost(this);
@@ -48,12 +50,12 @@ namespace Chan
       return c.AfterClosed();
     }
 
-    public Task CreateNetChan<T>(string name, NetChanConfig cfg, ChanDistributionType type = ChanDistributionType.FirstOnly) {
+    public Task CreateNetChan<T>(string name, NetChanConfig<T> cfg, ChanDistributionType type = ChanDistributionType.FirstOnly) {
       //TODO: normalize name
       if (locals.Keys.Contains(name))
         throw new ArgumentException("chan with given name already exists");
       var dtf = Chan.FactoryFor<T>(type);
-      var box = FromChanCrossPair(dtf, dtf, (l,r) => new ChanBox(l, new NetChanServer<T>(r, cfg)));
+      var box = Chan.FromChanCrossPair(dtf, dtf, (l,r) => new ChanBox(l, new NetChanServer<T>(r, cfg, name, type)));
       locals.Add(name, box);
       return box.Server.AfterClosed();
     }
@@ -108,7 +110,11 @@ namespace Chan
     }
 
     async Task<TcpClient> TcpListenerAcceptOne(TcpListener listener) {
-      var c = await listener.AcceptTcpClientAsync();
+      var cT = listener.AcceptTcpClientAsync();
+      var timeout = Task.Delay(connectingServerTimeout);
+      if (Task.WhenAny(cT, timeout) == timeout)
+        throw new TimeoutException("No client connected to listener. (timeout: {0}ms)".Format(connectingServerTimeout));
+      var c = await cT;
       listener.Stop();
       return c;
     }
@@ -146,7 +152,11 @@ namespace Chan
       if (!box.IsNetChan)
         throw new ArgumentException("Requested chan is only locally accessible. ({0})"
                                     .Format(chanName.AbsolutePath as object));
-      return box.Server;
+      var s = box.Server;
+      if (s.IsClosed)
+        throw new InvalidOperationException("Server closed.");
+
+      return s;
     }
 
     NetChanConnectionInfo Request(Uri chanName, Func<NetChanServer,Action<TcpClient, uint>> starter) {
@@ -163,11 +173,11 @@ namespace Chan
     }
 
     NetChanConnectionInfo INetChanProvider.RequestSender(Uri chanName) {
-      return Request(chanName, x => x.StartSender);
+      return Request(chanName, x => x.StartSenderCounterpart);
     }
 
     NetChanConnectionInfo INetChanProvider.RequestReceiver(Uri chanName) {
-      return Request(chanName, x => x.StartReceiver);
+      return Request(chanName, x => x.StartReceiverCounterpart);
     }
     #endregion
     protected sealed class ChanBox {
@@ -184,15 +194,6 @@ namespace Chan
       }
 
       public bool IsNetChan{ get { return Server != null; } }
-    }
-
-    ///cross-wires 2 channels: returning 2 values through a merging function
-    T FromChanCrossPair<T, TM, TL, TR>(Func<IChanReceiver<TM>, IChanSender<TM>, TL> fl,
-                                       Func<IChanReceiver<TM>, IChanSender<TM>, TR> fr,
-                                       Func<TL, TR, T> f) {
-      var c1 = new ChanAsync<TM>(); 
-      var c2 = new ChanAsync<TM>();
-      return f(fl(c1, c2), fr(c2, c1));
     }
   }
 

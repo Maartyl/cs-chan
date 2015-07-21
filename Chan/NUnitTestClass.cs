@@ -106,12 +106,7 @@ namespace Chan
           DebugCounter.Incg("test.order", "cancelled");
         }
       };
-//      Task at = null;
-//      Task bt = null;
-//      Action a = () => at = af();
-//      Action b = () => bt = bf();
-//      Parallel.Invoke(b, a);
-//      Task.WaitAll(at, bt);
+
       Task.WaitAll(af(), bf());
     }
   }
