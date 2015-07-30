@@ -91,6 +91,18 @@ namespace Chan
       }
     }
 
+    public IChanSender<T> GetSender<T>(Uri chanUri) {
+      ChanUriValidation(chanUri);
+
+      if (chanUri.Authority == "") 
+        return GetLocalSender<T>(chanUri.AbsolutePath);
+      else {
+        //remote
+        //TODO: how to store connections... - reuse for sure.
+        throw new NotImplementedException();
+      }
+    }
+
     void ChanUriValidation(Uri chanUri) {
       if (chanUri == null)
         throw new ArgumentNullException("chanUri");

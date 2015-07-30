@@ -31,5 +31,15 @@ namespace Chan
 
     public bool IsOk{ get { return ErrorCode == 0 && ErrorMessage == null && ErrorType == null; } }
   }
+
+  public class NetChanProviderException : Exception {
+    public NetChanConnectionInfo Info { get; private set; }
+
+    public NetChanProviderException(NetChanConnectionInfo info):base (info.ErrorMessage) {
+      if (info.ErrorCode != 0)
+        this.HResult = info.ErrorCode;
+      Info = info;
+    }
+  }
 }
 

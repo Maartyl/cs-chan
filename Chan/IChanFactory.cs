@@ -5,17 +5,24 @@ using System.Collections.Generic;
 
 namespace Chan
 {
-  //non-generic to be used in dicts
-  //TODO: factory is maybe not a good name: often returns the same...
-  public interface IChanFactory<TCtor> {
-    IChanReceiver<T> GetReceiver<T>(TCtor ctorData);
-
-    IChanSender<T> GetSender<T>(TCtor ctorData);
-
+  public interface IChanFactoryBase {
     Type GenericType{ get; }
 
     ///if contained and freed
     bool Free(IChanBase chan);
+  }
+
+  public interface IChanSenderFactory<TCtor> : IChanFactoryBase {
+    IChanSender<T> GetSender<T>(TCtor ctorData);
+  }
+
+  public interface IChanReceiverFactory<TCtor> : IChanFactoryBase {
+    IChanReceiver<T> GetReceiver<T>(TCtor ctorData);
+  }
+  //non-generic to be used in dicts
+  //TODO: factory is maybe not a good name: often returns the same...
+  public interface IChanFactory<TCtor> :  IChanSenderFactory<TCtor>, IChanReceiverFactory<TCtor> {
+
   }
   //senders are generally all gonna be the same, but 
   // \ receivers will be different for broadcast
@@ -69,20 +76,20 @@ namespace Chan
     public override ChanDistributionType DistributionType { get { return ChanDistributionType.FirstOnly; } }
     #endregion
   }
-  //this works like events: if noone subscribed, message get's lost
+  //this works like events: if noone subscribed, message gets lost
   //receivers do not propagate close
   public class ChanFactoryReceiveAll<T> : ChanFactory<T, Nothing> {
-    ChanEvent<T> evt;
-    IChanSender<T> chanS;
-    Dictionary<IChanBase,Action<T>> receivers;
+    readonly ChanEvent<T> evt;
+    readonly IChanSender<T> chanS;
+    readonly Dictionary<IChanBase,Action<T>> receivers = new Dictionary<IChanBase, Action<T>>();
     volatile bool closedAndEmpty;
-    ExceptionDrain drain = new ExceptionDrain();
+    readonly ExceptionDrain drain = new ExceptionDrain();
 
     public ChanFactoryReceiveAll(IChanReceiver<T> chanR, IChanSender<T> chanS) {
       this.evt = new ChanEvent<T>(chanR);
       this.chanS = chanS;
       drain.Consume(chanR.AfterClosed().ContinueWith(t => {
-        closedAndEmpty = true;
+        closedAndEmpty = true; //TODO: doc
         drain.Consume(Task.WhenAll(receivers.Select(kv => kv.Key.Close())));
       }));
     }
@@ -92,20 +99,25 @@ namespace Chan
         return Chan.Closed<T>();
 
       var c = new ChanAsync<T>();
-      Action<T> self = null; //ref to e
-      Action<T> eh = async t => {
-        var s = c.SendAsync(t);
+      Action<T> self = null; //ref to receivedEventHandler
+      Action<T> receivedEventHandler = async t => {
+        var sT = c.SendAsync(t);
         try {
-          await s;
-        } catch (TaskCanceledException) {
-          evt.ReceivedMessage -= self;
-        } catch (Exception) {
-          drain.Consume(s);
-          throw;
+          await sT;
+        } catch (TaskCanceledException) { //if c closed: unsubscribe
+          lock (receivers) {
+            evt.ReceivedMessage -= self;
+            receivers.Remove(c);
+          }
+        } catch (Exception) { //propagate exception
+          drain.Consume(sT);
+          throw;//TODO:decide : should something somewhere in background throw? - probably not-> DEBUG
         }};
-      self = eh;
-      receivers.Add(c, self);
-      evt.ReceivedMessage += self;
+      self = receivedEventHandler;
+      lock (receivers) {
+        receivers.Add(c, self);
+        evt.ReceivedMessage += self;
+      }
 
       return c;
     }
@@ -116,11 +128,12 @@ namespace Chan
 
     public override bool Free(IChanBase chan) {
       Action<T> a;
-      if (receivers.TryGetValue(chan, out a)) {
-        evt.ReceivedMessage -= a;
-        receivers.Remove(chan);
-        return true;
-      }
+      lock (receivers) 
+        if (receivers.TryGetValue(chan, out a)) {
+          evt.ReceivedMessage -= a;
+          receivers.Remove(chan);
+          return true;
+        }
       return false;
     }
 

@@ -50,8 +50,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NUnitTestClass.cs" />
     <Compile Include="TaskCompletionSourceEmpty.cs" />
-    <Compile Include="IChanServiceTest.cs" />
-    <Compile Include="ChanServiceTest.cs" />
     <Compile Include="IChanBase.cs" />
     <Compile Include="RemoteException.cs" />
     <Compile Include="ISerDes.cs" />
@@ -87,7 +85,8 @@
     <Compile Include="InvokeOnceEmbeddable.cs" />
     <Compile Include="NetChanProviderClient.cs" />
     <Compile Include="NetChanClientCache.cs" />
-    <Compile Include="NetChan\NetChanClient.cs" />
+    <Compile Include="NetChanClientCacheReceiver.cs" />
+    <Compile Include="NetChanClientCacheSender.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
