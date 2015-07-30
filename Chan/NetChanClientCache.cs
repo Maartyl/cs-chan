@@ -12,6 +12,7 @@ namespace Chan
     readonly Dictionary<Uri, T> cache = new Dictionary<Uri, T>();
     readonly Dictionary<Uri, Task<T>> connecting = new Dictionary<Uri, Task<T>>();
     readonly object cacheLock = new object();
+    readonly protected TaskCollector clientStarts = new TaskCollector(prematureCompletion: true);
 
     protected NetChanClientCache() {
 

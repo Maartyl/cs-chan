@@ -2,7 +2,7 @@ using System;
 
 namespace Chan
 {
-  internal abstract class NetChanClientCacheSender : NetChanClientCache<IChanReceiverFactory<Nothing>> {
+  internal abstract class NetChanClientCacheSender : NetChanClientCache<IChanSenderFactory<Nothing>> {
     protected NetChanClientCacheSender() {
     }
 
@@ -19,10 +19,12 @@ namespace Chan
 
     }
 
-    protected override IChanReceiverFactory<Nothing> RequireConnect(System.Net.Sockets.TcpClient c, NetChanConnectionInfo info, Uri chan) {
+    protected override IChanSenderFactory<Nothing> RequireConnect(System.Net.Sockets.TcpClient c, NetChanConnectionInfo info, Uri chan) {
       //assert info.IsOk == true
       var s = c.GetStream();
-      return Chan.FactoryFor(info.Type, null/*no receiver*/, new NetChanSenderClient<T>(defaultConfig.Clone(s, s)));
+      var client = new NetChanSenderClient<T>(defaultConfig.Clone(s, s));
+      clientStarts.Add(client.Start(info.Key));
+      return Chan.FactoryFor(info.Type, null/*no receiver*/, client);
     }
   }
 }

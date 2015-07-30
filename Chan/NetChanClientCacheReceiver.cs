@@ -22,7 +22,9 @@ namespace Chan
     protected override IChanReceiverFactory<Nothing> RequireConnect(System.Net.Sockets.TcpClient c, NetChanConnectionInfo info, Uri chan) {
       //assert info.IsOk == true
       var s = c.GetStream();
-      return Chan.FactoryFor(info.Type, new NetChanReceiverClient<T>(defaultConfig.Clone(s, s)), null/*no sender*/);
+      var client = new NetChanReceiverClient<T>(defaultConfig.Clone(s, s));
+      clientStarts.Add(client.Start(info.Key));
+      return Chan.FactoryFor(info.Type, client, null/*no sender*/);
     }
   }
 }
