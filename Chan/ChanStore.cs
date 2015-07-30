@@ -13,13 +13,15 @@ namespace Chan
   ///allows access to registered channels
   /// - this class is not thread safe
   public class ChanStore : INetChanProvider {
-    Dictionary<string, ChanBox> locals = new Dictionary<string, ChanBox>();
-    ServiceHost netChanProviderHost;
+    readonly Dictionary<string, ChanBox> locals = new Dictionary<string, ChanBox>();
+    readonly Dictionary<Type, NetChanClientCacheReceiver> clientReceivers = new Dictionary<Type, NetChanClientCacheReceiver>();
+    readonly Dictionary<Type, NetChanClientCacheSender> clientSenders = new Dictionary<Type, NetChanClientCacheSender>();
+    readonly ServiceHost netChanProviderHost;
     int connectingServerTimeout = 30 * 1000;
     int connectionClientTimeout = 40 * 1000;
 
     public ChanStore() {
-      netChanProviderHost = new ServiceHost(this);
+      netChanProviderHost = new ServiceHost(this/*what implements interface*/);
     }
     #region server start, stop
     public void StartServer(Uri address, Binding binding) {
@@ -58,6 +60,22 @@ namespace Chan
       var box = Chan.FromChanCrossPair(dtf, dtf, (l,r) => new ChanBox(l, new NetChanServer<T>(r, cfg, name, type)));
       locals.Add(name, box);
       return box.Server.AfterClosed();
+    }
+
+    public Task PrepareClientSenderForType<T>(NetChanConfig<T> cfg) {
+      lock (clientSenders) {
+        if (clientSenders.ContainsKey(typeof(T))) 
+          throw new ArgumentException("Client configuration for type is present.");
+        return (clientSenders[typeof(T)] = new NetChanClientCacheSender<T>(cfg)).CollectedExceptions; 
+      }
+    }
+
+    public Task PrepareClientReceiverForType<T>(NetChanConfig<T> cfg) {
+      lock (clientReceivers) {
+        if (clientReceivers.ContainsKey(typeof(T))) 
+          throw new ArgumentException("Client configuration for type is present.");
+        return (clientReceivers[typeof(T)] = new NetChanClientCacheReceiver<T>(cfg)).CollectedExceptions; 
+      }
     }
     #endregion
     static TR GetWrongTypeThrow<T, TR>(Type actualGenericType) { 

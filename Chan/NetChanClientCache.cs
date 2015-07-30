@@ -18,6 +18,8 @@ namespace Chan
 
     }
 
+    public Task CollectedExceptions{ get { return clientStarts.Task; } }
+
     ///creates local Sender/ Receiver based on Cache type
     protected abstract T RequireConnect(TcpClient c, NetChanConnectionInfo info, Uri chan);
 
