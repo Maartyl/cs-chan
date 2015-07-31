@@ -47,7 +47,7 @@ namespace Chan
     #endregion
   }
   //only wraps: does not provide broadcast
-  public class ChanFactoryWrap<T> : ChanFactory<T, Nothing> {
+  public class ChanFactoryWrap<T> : ChanFactory<T, Unit> {
     IChanReceiver<T> chanR;
     IChanSender<T> chanS;
 
@@ -60,11 +60,11 @@ namespace Chan
 
     }
     #region implemented abstract members of ChanFactory
-    public override IChanReceiver<T> GetReceiver(Nothing ctorData) {
+    public override IChanReceiver<T> GetReceiver(Unit ctorData) {
       return chanR;
     }
 
-    public override IChanSender<T> GetSender(Nothing ctorData) {
+    public override IChanSender<T> GetSender(Unit ctorData) {
       return chanS;
     }
 
@@ -78,7 +78,7 @@ namespace Chan
   }
   //this works like events: if noone subscribed, message gets lost
   //receivers do not propagate close
-  public class ChanFactoryReceiveAll<T> : ChanFactory<T, Nothing> {
+  public class ChanFactoryReceiveAll<T> : ChanFactory<T, Unit> {
     readonly ChanEvent<T> evt;
     readonly IChanSender<T> chanS;
     readonly Dictionary<IChanBase,Action<T>> receivers = new Dictionary<IChanBase, Action<T>>();
@@ -94,7 +94,7 @@ namespace Chan
       }));
     }
     #region implemented abstract members of ChanFactory
-    public override IChanReceiver<T> GetReceiver(Nothing ctorData) {
+    public override IChanReceiver<T> GetReceiver(Unit ctorData) {
       if (closedAndEmpty)
         return Chan.Closed<T>();
 
@@ -122,7 +122,7 @@ namespace Chan
       return c;
     }
 
-    public override IChanSender<T> GetSender(Nothing ctorData) {
+    public override IChanSender<T> GetSender(Unit ctorData) {
       return chanS;
     }
 

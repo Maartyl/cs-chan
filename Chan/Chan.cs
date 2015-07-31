@@ -32,15 +32,15 @@ namespace Chan
         await Task.WhenAll(schan.Close(), rchan.Close());
     }
 
-    public static ChanFactory<T, Nothing> FactorySimple<T>(IChanReceiver<T> rchan, IChanSender<T> schan) {
+    public static ChanFactory<T, Unit> FactorySimple<T>(IChanReceiver<T> rchan, IChanSender<T> schan) {
       return new ChanFactoryWrap<T>(rchan, schan);
     }
 
-    public static ChanFactory<T, Nothing> FactoryBroadcast<T>(IChanReceiver<T> rchan, IChanSender<T> schan) {
+    public static ChanFactory<T, Unit> FactoryBroadcast<T>(IChanReceiver<T> rchan, IChanSender<T> schan) {
       return new ChanFactoryReceiveAll<T>(rchan, schan);
     }
 
-    public static ChanFactory<T, Nothing> FactoryFor<T>(ChanDistributionType dt, IChanReceiver<T> rchan, IChanSender<T> schan) {
+    public static ChanFactory<T, Unit> FactoryFor<T>(ChanDistributionType dt, IChanReceiver<T> rchan, IChanSender<T> schan) {
       switch (dt) {
         case ChanDistributionType.Broadcast:
           return FactoryBroadcast(rchan, schan);
@@ -51,7 +51,7 @@ namespace Chan
       }
     }
 
-    public static Func<IChanReceiver<T>, IChanSender<T>, ChanFactory<T, Nothing>> FactoryFor<T>(ChanDistributionType dt) {
+    public static Func<IChanReceiver<T>, IChanSender<T>, ChanFactory<T, Unit>> FactoryFor<T>(ChanDistributionType dt) {
       return (a, b) => FactoryFor(dt, a, b);
     }
 

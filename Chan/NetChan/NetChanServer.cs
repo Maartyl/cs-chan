@@ -8,13 +8,13 @@ namespace Chan
 {
   //not necessarily connected end-points of tcp : just something that can open those
   public abstract class NetChanServer : IChanBase {
-    readonly protected IChanFactory<Nothing> localChan;
+    readonly protected IChanFactory<Unit> localChan;
     readonly protected TaskCollector connectingExCollector = new TaskCollector();
     readonly protected TaskCollector runningExCollector = new TaskCollector();
     readonly InvokeOnceEmbeddable closing;
     volatile bool isClosed = false;
 
-    protected NetChanServer(IChanFactory<Nothing> localChan) {
+    protected NetChanServer(IChanFactory<Unit> localChan) {
       closing = new InvokeOnceEmbeddable(CloseOnce);
       this.localChan = localChan;
     }
@@ -54,7 +54,7 @@ namespace Chan
     readonly NetChanConfig<T> config;
     readonly object collectionsLock = new object();
 
-    public NetChanServer(IChanFactory<Nothing> crossLocal, NetChanConfig<T> cfg,
+    public NetChanServer(IChanFactory<Unit> crossLocal, NetChanConfig<T> cfg,
                          string name, ChanDistributionType type):base(crossLocal) {
       this.config = cfg;
       Name = name;

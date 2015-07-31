@@ -87,6 +87,7 @@
     <Compile Include="NetChanClientCache.cs" />
     <Compile Include="NetChanClientCacheReceiver.cs" />
     <Compile Include="NetChanClientCacheSender.cs" />
+    <Compile Include="Nothing.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
