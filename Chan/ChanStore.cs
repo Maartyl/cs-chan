@@ -91,7 +91,7 @@ namespace Chan
       return GetLocalGeneric<T,IChanSender<T>>(chanName, Exts.GetSender<T>);
     }
 
-    TC GetLocalGeneric<T, TC>(string chanName, Func<IChanFactory<Nothing>, TC> getChan) where TC : class {
+    TC GetLocalGeneric<T, TC>(string chanName, Func<IChanFactory<Unit>, TC> getChan) where TC : class {
       ChanBox box; //null unless exists; wrong type: exception
       return !locals.TryGetValue(chanName, out box) ? null 
         : getChan(box.Chan) ?? GetWrongTypeThrow<T, TC>(box.Chan.GenericType);
@@ -211,16 +211,16 @@ namespace Chan
     }
     #endregion
     protected sealed class ChanBox {
-      public IChanFactory<Nothing> Chan{ get; private set; }
+      public IChanFactory<Unit> Chan{ get; private set; }
 
       public NetChanServer Server{ get; private set; }
 
-      public ChanBox(IChanFactory<Nothing> local, NetChanServer server) {
+      public ChanBox(IChanFactory<Unit> local, NetChanServer server) {
         Chan = local;
         Server = server;
       }
 
-      public ChanBox(IChanFactory<Nothing> local):this(local, null) {
+      public ChanBox(IChanFactory<Unit> local):this(local, null) {
       }
 
       public bool IsNetChan{ get { return Server != null; } }

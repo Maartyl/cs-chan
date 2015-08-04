@@ -1,24 +1,24 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Trace" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/NetChanClientCache.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/Unit.cs">
     <Files>
-      <File FileName="Chan/DbgCns.cs" Line="17" Column="5" />
-      <File FileName="Chan/Program.cs" Line="62" Column="34" />
-      <File FileName="Chan/ChanStore.cs" Line="58" Column="28" />
-      <File FileName="WCFTestsClient/Program.cs" Line="15" Column="7" />
-      <File FileName="UnixDbg/Program.cs" Line="1" Column="1" />
-      <File FileName="Chan/NetChanClientCache.cs" Line="25" Column="5" />
-      <File FileName="Chan/NetChan/NetChanClient.cs" Line="8" Column="31" />
-      <File FileName="Chan/Chan.cs" Line="10" Column="54" />
-      <File FileName="Chan/IChanFactory.cs" Line="1" Column="1" />
-      <File FileName="Chan/INetChanProvider.cs" Line="41" Column="19" />
+      <File FileName="Chan/NetChanClientCache.cs" Line="21" Column="73" />
+      <File FileName="Chan/ChanStore.cs" Line="32" Column="5" />
+      <File FileName="Chan/NetChanClientCacheReceiver.cs" Line="22" Column="49" />
+      <File FileName="Chan/NetChanClientCacheSender.cs" Line="22" Column="35" />
+      <File FileName="Chan/TaskCollector.cs" Line="29" Column="8" />
+      <File FileName="Chan/NetChan/NetChanBase.cs" Line="42" Column="85" />
+      <File FileName="Chan/TaskHelpers.cs" Line="1" Column="1" />
+      <File FileName="Chan/Program.cs" Line="1" Column="1" />
+      <File FileName="Chan/TaskCompletionSourceEmpty.cs" Line="6" Column="1" />
+      <File FileName="Chan/Unit.cs" Line="6" Column="41" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Chan" expanded="True">
             <Node name="NetChan" expanded="True" />
-            <Node name="NetChanClientCache.cs" selected="True" />
+            <Node name="TaskCompletionSourceEmpty.cs" selected="True" />
           </Node>
           <Node name="UnixDbg" expanded="True" />
           <Node name="WCFTestsClient" expanded="True" />
