@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCFTestsClient", "WCFTestsC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTcp", "TestTcp\TestTcp.csproj", "{C38B81B7-C0F4-46D3-81E7-2BF4F001E4EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chat", "Chat\Chat.csproj", "{21729E15-3667-4692-A0D9-FCCB17E6C1CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -20,6 +22,12 @@ Global
 		Trace|Any CPU = Trace|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21729E15-3667-4692-A0D9-FCCB17E6C1CB}.Debug|x86.ActiveCfg = Debug|x86
+		{21729E15-3667-4692-A0D9-FCCB17E6C1CB}.Debug|x86.Build.0 = Debug|x86
+		{21729E15-3667-4692-A0D9-FCCB17E6C1CB}.Release|x86.ActiveCfg = Release|x86
+		{21729E15-3667-4692-A0D9-FCCB17E6C1CB}.Release|x86.Build.0 = Release|x86
+		{21729E15-3667-4692-A0D9-FCCB17E6C1CB}.Trace|Any CPU.ActiveCfg = Debug|x86
+		{21729E15-3667-4692-A0D9-FCCB17E6C1CB}.Trace|Any CPU.Build.0 = Debug|x86
 		{2D9D6E78-B407-4F7A-9E35-7550E7AD910A}.Debug|x86.ActiveCfg = Debug|x86
 		{2D9D6E78-B407-4F7A-9E35-7550E7AD910A}.Debug|x86.Build.0 = Debug|x86
 		{2D9D6E78-B407-4F7A-9E35-7550E7AD910A}.Release|x86.ActiveCfg = Release|x86
@@ -58,7 +66,6 @@ Global
 		{C38B81B7-C0F4-46D3-81E7-2BF4F001E4EE}.Trace|Any CPU.Build.0 = Trace|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = UnixDbg\UnixDbg.csproj
 		Policies = $0
 		$0.StandardHeader = $1
 		$1.Text = 

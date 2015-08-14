@@ -17,12 +17,12 @@ namespace Chan
       return string.Format(s, args);
     }
 
-    internal static IChanReceiver<T> GetReceiver<T>(this IChanFactory<Unit> f) {
-      return f.GetReceiver<T>(null); //null == only value of Nothing
+    internal static IChanReceiver<T> GetReceiver<T>(this IChanReceiverFactory<Unit> f) {
+      return f.GetReceiver<T>(null); //null == only value of Unit
     }
 
-    internal static IChanSender<T> GetSender<T>(this IChanFactory<Unit> f) {
-      return f.GetSender<T>(null); //null == only value of nothing
+    internal static IChanSender<T> GetSender<T>(this IChanSenderFactory<Unit> f) {
+      return f.GetSender<T>(null); //null == only value of Unit
     }
   }
 }

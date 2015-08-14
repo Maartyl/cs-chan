@@ -35,7 +35,9 @@ namespace Chan
     internal void CollectServerConnectedTask(Task t) {
       connectingExCollector.Add(t);
     }
+
     #region IChanBase implementation
+
     public Task Close() {
       return closing.Invoke();
     }
@@ -45,6 +47,7 @@ namespace Chan
     }
 
     protected abstract Task CloseOnce();
+
     #endregion
   }
 
@@ -55,7 +58,7 @@ namespace Chan
     readonly object collectionsLock = new object();
 
     public NetChanServer(IChanFactory<Unit> crossLocal, NetChanConfig<T> cfg,
-                         string name, ChanDistributionType type):base(crossLocal) {
+                         string name, ChanDistributionType type) : base(crossLocal) {
       this.config = cfg;
       Name = name;
       Type = type;
@@ -70,18 +73,22 @@ namespace Chan
           unregister();
       }
     }
+
     #region implemented abstract members of NetChanServer
+
     public override void StartSenderCounterpart(TcpClient client, uint key) {
       var s = client.GetStream();
       var cfg = config.Clone(s, s);
       var srv = new NetChanReceiverServer<T>(cfg);
+      var running = srv.Start(key);
       lock (collectionsLock) {
-        if (IsClosed)
+        if (IsClosed) {
+          Close();
           throw new InvalidOperationException("server closed");
+        }
         receivers.Add(srv);
       }
-      var running = srv.Start(key);
-      var pipe = Chan.Pipe(srv, localChan.GetSender<T>(), cfg.PropagateCloseFromSender);
+      var pipe = srv.Pipe(localChan.GetSender<T>(), cfg.PropagateCloseFromSender);
       runningExCollector.Add(HandleNetChanServerClose(running, pipe, () => receivers.Remove(srv)));
     }
 
@@ -89,13 +96,15 @@ namespace Chan
       var s = client.GetStream();
       var cfg = config.Clone(s, s);
       var srv = new NetChanSenderServer<T>(cfg);
+      var running = srv.Start(key);
       lock (collectionsLock) {
-        if (IsClosed)
+        if (IsClosed) {
+          srv.Close();
           throw new InvalidOperationException("server closed");
+        }
         senders.Add(srv);
       }
-      var running = srv.Start(key);
-      var pipe = Chan.Pipe(localChan.GetReceiver<T>(), srv, cfg.PropagateCloseFromReceiver);
+      var pipe = localChan.GetReceiver<T>().Pipe(srv, cfg.PropagateCloseFromReceiver);
       runningExCollector.Add(HandleNetChanServerClose(running, pipe, () => senders.Remove(srv)));
     }
 
@@ -108,6 +117,7 @@ namespace Chan
       var others = new Task[] { runningExCollector.Task, connectingExCollector.Task };
       return Task.WhenAll(sc.Concat(rc).Concat(others));
     }
+
     #endregion
   }
 }

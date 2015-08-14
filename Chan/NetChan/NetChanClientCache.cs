@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
-  internal abstract class NetChanClientCache<T> where T : class {
+  internal abstract class NetChanClientCache<T> { /*where T : class*/
     readonly Dictionary<Uri, T> cache = new Dictionary<Uri, T>();
     readonly Dictionary<Uri, Task<T>> connecting = new Dictionary<Uri, Task<T>>();
     readonly object cacheLock = new object();
@@ -55,7 +55,7 @@ namespace Chan
 
       Task<T> tt;//rslt if connecting meanwhile
       T t; //rslt if became available meanwhile
-      lock (cacheLock) 
+      lock (cacheLock)
         return connecting.TryGetValue(chan, out tt) ? tt
           : cache.TryGetValue(chan, out t) ? Task.FromResult(t)
             : connecting[chan] = Task.Run(() => {
@@ -75,7 +75,7 @@ namespace Chan
           //exception / error / not OK
           //remove from connecting without stroring in cache (before throw)
           // -> can be tried again
-          lock (cacheLock) 
+          lock (cacheLock)
             connecting.Remove(chan);
           
           if (info.ErrorType != null && info.ErrorMessage != null) {

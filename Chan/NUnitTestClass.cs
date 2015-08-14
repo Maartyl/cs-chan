@@ -28,7 +28,7 @@ namespace Chan
 
     public void AllPassed(Chan<int> chan) {
       Func<Task> a = async () => {
-        for (int i = 0; i <1000; ++i)
+        for (int i = 0; i < 1000; ++i)
           await chan.SendAsync(i);
         await chan.Close();
       };
@@ -115,7 +115,8 @@ namespace Chan
   public class NetChanTest : NetChanBase {
 
     #region implemented abstract members of NetChanBase
-    public NetChanTest():base(new NetChanConfig()) {
+
+    public NetChanTest() : base(new NetChanConfig<Unit>()) {
 
     }
 
@@ -130,7 +131,9 @@ namespace Chan
     protected override Task OnCloseReceived(Header h) {
       throw new NotImplementedException();
     }
+
     #endregion
+
     [Test]
     public void HeaderToString() {
       //I know, this is not a proper test...
@@ -140,7 +143,7 @@ namespace Chan
       Console.WriteLine(CreateBaseMsgHeader());
       Console.WriteLine(CreateBaseMsgHeader());
       Console.WriteLine(new Header(Header.Op.Err) { ErrorCode = 45, Length = 100 });
-      Console.WriteLine(new Header(Header.Op.Open) { Key=789564 });
+      Console.WriteLine(new Header(Header.Op.Open) { Key = 789564 });
       Console.WriteLine(Header.AckFor(CreateBaseMsgHeader()));
     }
   }

@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>12.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4025F931-3CF1-42DF-8D67-7BA352462AB3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>WCFTestsHost</RootNamespace>

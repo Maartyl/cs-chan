@@ -24,7 +24,7 @@ namespace Chan
   public interface IChanFactory<TCtor> :  IChanSenderFactory<TCtor>, IChanReceiverFactory<TCtor> {
 
   }
-  //senders are generally all gonna be the same, but 
+  //senders are generally all gonna be the same, but
   // \ receivers will be different for broadcast
   public abstract class ChanFactory<T, TCtor> : IChanFactory<TCtor> {
     public abstract IChanReceiver<T> GetReceiver(TCtor ctorData);
@@ -32,7 +32,9 @@ namespace Chan
     public abstract IChanSender<T> GetSender(TCtor ctorData);
 
     public abstract ChanDistributionType DistributionType{ get; }
+
     #region IChanFactory implementation
+
     public Type GenericType{ get { return typeof(T); } }
 
     public IChanReceiver<TT> GetReceiver<TT>(TCtor ctorData) {
@@ -44,6 +46,7 @@ namespace Chan
     }
 
     public abstract bool Free(IChanBase chan);
+
     #endregion
   }
   //only wraps: does not provide broadcast
@@ -56,10 +59,12 @@ namespace Chan
       this.chanS = chanS;
     }
 
-    public ChanFactoryWrap(IChan<T> chan): this(chan, chan) {
+    public ChanFactoryWrap(IChan<T> chan) : this(chan, chan) {
 
     }
+
     #region implemented abstract members of ChanFactory
+
     public override IChanReceiver<T> GetReceiver(Unit ctorData) {
       return chanR;
     }
@@ -74,6 +79,7 @@ namespace Chan
     }
 
     public override ChanDistributionType DistributionType { get { return ChanDistributionType.FirstOnly; } }
+
     #endregion
   }
   //this works like events: if noone subscribed, message gets lost
@@ -89,11 +95,13 @@ namespace Chan
       this.evt = new ChanEvent<T>(chanR);
       this.chanS = chanS;
       drain.Consume(chanR.AfterClosed().ContinueWith(t => {
-        closedAndEmpty = true; //TODO: doc
+        closedAndEmpty = true; //close all receivers and consume exceptions
         drain.Consume(Task.WhenAll(receivers.Select(kv => kv.Key.Close())));
       }));
     }
+
     #region implemented abstract members of ChanFactory
+
     public override IChanReceiver<T> GetReceiver(Unit ctorData) {
       if (closedAndEmpty)
         return Chan.Closed<T>();
@@ -112,7 +120,8 @@ namespace Chan
         } catch (Exception) { //propagate exception
           drain.Consume(sT);
           throw;//TODO:decide : should something somewhere in background throw? - probably not-> DEBUG
-        }};
+        }
+      };
       self = receivedEventHandler;
       lock (receivers) {
         receivers.Add(c, self);
@@ -128,7 +137,7 @@ namespace Chan
 
     public override bool Free(IChanBase chan) {
       Action<T> a;
-      lock (receivers) 
+      lock (receivers)
         if (receivers.TryGetValue(chan, out a)) {
           evt.ReceivedMessage -= a;
           receivers.Remove(chan);
@@ -138,6 +147,7 @@ namespace Chan
     }
 
     public override ChanDistributionType DistributionType { get { return ChanDistributionType.Broadcast; } }
+
     #endregion
   }
 }

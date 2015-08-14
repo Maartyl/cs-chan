@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{477A2016-6019-4445-B269-2024E6BFD9D2}</ProjectGuid>
+    <ProjectGuid>{21729E15-3667-4692-A0D9-FCCB17E6C1CB}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>UnixDbg</RootNamespace>
-    <AssemblyName>UnixDbg</AssemblyName>
+    <RootNamespace>Chat</RootNamespace>
+    <AssemblyName>Chat</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -29,20 +29,14 @@
     <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Trace|AnyCPU' ">
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Trace</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Mono.Posix" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnixSignalEvent.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

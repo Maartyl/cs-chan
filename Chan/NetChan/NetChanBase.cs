@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 namespace Chan
 {
   //current limitation: most is done asynchronously, but sequentially
-  // - i'm not sure about the implications of doing it concurrently... 
-  // - - (probably need swaping read bufferes / ...) - well, maybe not if I only did 1 packet at a time... 
+  // - i'm not sure about the implications of doing it concurrently...
+  // - - (probably need swaping read bufferes / ...) - well, maybe not if I only did 1 packet at a time...
   // - - maybe; not priority
   // - - - ReadHeader could start reading body as soon as done, knowing for which ops...
   public abstract class NetChanBase {
@@ -54,14 +54,14 @@ namespace Chan
 
     protected async Task HandshakeClient(uint key) {
       DbgCns.Trace(this, "handshake-clnt0");
-      await SendSimple(new Header(Header.Op.Open) { Key=key });
+      await SendSimple(new Header(Header.Op.Open) { Key = key });
       await Flush();
       var hResponse = await ReceiveHeader();
-      DbgCns.Trace(this, "handshake-clnt1");
+      DbgCns.Trace(this, "handshake-clnt1"); 
 
-      if (hResponse.OpCode == Header.Op.Ack) 
+      if (hResponse.OpCode == Header.Op.Ack)
         return;
-      if (hResponse.OpCode == Header.Op.Err) 
+      if (hResponse.OpCode == Header.Op.Err)
         await OnErrReceived(hResponse);
       else
         throw new InvalidOperationException("expected ACK/ERR; got: " + hResponse.OpCode);
@@ -194,7 +194,7 @@ namespace Chan
       if (bs.Length > ushort.MaxValue)
         throw new ArgumentException("error message too long (max: 64KB)", "message");
       await SendBytes(new Header(Header.Op.Err) { ErrorCode = code }, 
-                      bs, 0, (ushort) bs.Length);
+        bs, 0, (ushort) bs.Length);
       await Flush();
     }
 
@@ -260,7 +260,6 @@ namespace Chan
           throw new EndOfStreamException("EOS while receiving " + errWhatReceiving + "; read: (" + read + "/" + count + ")");
         else
           read += curRead;
-        //TODO: ?: start deserializing here
       }
     }
     //this class is not thread safe
@@ -283,7 +282,7 @@ namespace Chan
       public Op OpCode{ get { return (Op) data[0]; } set { data[0] = (byte) value; } }
       //cannot use BitConverter to ensure endianness
       public ushort Fragment {
-        get { return (ushort) (data[4] * 256 + data[5]);}
+        get { return (ushort) (data[4] * 256 + data[5]); }
         set {
           data[5] = (byte) (value&255);
           data[4] = (byte) ((value >> 8)&255);
@@ -291,7 +290,7 @@ namespace Chan
       }
 
       public ushort Length {
-        get { return (ushort) (data[6] * 256 + data[7]);} 
+        get { return (ushort) (data[6] * 256 + data[7]); } 
         set {
           data[7] = (byte) (value&255);
           data[6] = (byte) ((value >> 8)&255);
@@ -299,7 +298,7 @@ namespace Chan
       }
 
       public ushort Position {
-        get { return (ushort) (data[2] * 256 + data[3]);}
+        get { return (ushort) (data[2] * 256 + data[3]); }
         set {
           data[3] = (byte) (value&255);
           data[2] = (byte) ((value >> 8)&255);
@@ -309,7 +308,7 @@ namespace Chan
       public ushort ErrorCode { get { return Fragment; } set { Fragment = value; } }
 
       public uint Key {
-        get{ return Fragment * 256u * 256 + Length;}
+        get{ return Fragment * 256u * 256 + Length; }
         set {
           var shortMask = 256 * 256 - 1;
           Fragment = (ushort) ((value >> 16)&shortMask);
@@ -328,9 +327,9 @@ namespace Chan
       }
 
       void SetFlagValue(Flag f, bool value) {
-        if (value) 
+        if (value)
           data[1] |= (byte) f;
-        else 
+        else
           data[1] &= (byte) ~(byte) f;
       }
 
@@ -346,9 +345,9 @@ namespace Chan
         if (OpCode == Op.Err)
           format = "[{0} {1} {5}#{3}]";
         else if (OpCode == Op.Msg)
-            format = "[{0} {1} {2}{7}#{3}]";
-          else if (OpCode == Op.Open) 
-              format = "[{0} {1} {6}]";
+          format = "[{0} {1} {2}{7}#{3}]";
+        else if (OpCode == Op.Open)
+          format = "[{0} {1} {6}]";
         string hex = BitConverter.ToString(Bytes).Replace("-", "");
         return string.Format(format, hex, OpCode, Fragment, Length, Position, ErrorCode, Key, HasNextFragment ? "+" : "");
       }

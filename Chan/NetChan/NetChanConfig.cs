@@ -9,6 +9,13 @@ namespace Chan
 
     internal Stream Out{ get; set; }
 
+    protected NetChanConfig() {
+      //default values
+      InitialReceiveBufferSize = 1024;
+      InitialSendBufferSize = 2048;
+      PingDelayMs = 60 * 1000;
+    }
+
     public int InitialReceiveBufferSize{ get; set; }
 
     public int InitialSendBufferSize{ get; set; }
@@ -32,8 +39,8 @@ namespace Chan
 
     public ISerDes<T> SerDes {
       //no need to specify SerDes for serializable types
-      get { return serDes ?? BinarySerDesForSerializable<T>.SerDes;}
-      set { serDes = value;}
+      get { return serDes ?? BinarySerDesForSerializable<T>.SerDes; }
+      set { serDes = value; }
     }
 
     public NetChanConfig<T> Clone(Stream inS = null, Stream outS = null) {

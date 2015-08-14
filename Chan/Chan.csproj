@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>12.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{924F7673-B3D6-41CD-9CE5-2C956465189E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Chan</RootNamespace>
@@ -41,7 +39,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="nunit.framework" />
+    <Reference Include="nunit.framework">
+      <Package>nunit</Package>
+    </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -71,7 +71,6 @@
     <Compile Include="ChanEvent.cs" />
     <Compile Include="ChanStore.cs" />
     <Compile Include="ChanTee.cs" />
-    <Compile Include="INetChanProvider.cs" />
     <Compile Include="IChanFactory.cs" />
     <Compile Include="Chan.cs" />
     <Compile Include="ExceptionDrain.cs" />
@@ -83,11 +82,12 @@
     <Compile Include="Exts.cs" />
     <Compile Include="ConnectionCache.cs" />
     <Compile Include="InvokeOnceEmbeddable.cs" />
-    <Compile Include="NetChanProviderClient.cs" />
-    <Compile Include="NetChanClientCache.cs" />
-    <Compile Include="NetChanClientCacheReceiver.cs" />
-    <Compile Include="NetChanClientCacheSender.cs" />
-    <Compile Include="Nothing.cs" />
+    <Compile Include="Unit.cs" />
+    <Compile Include="NetChan\INetChanProvider.cs" />
+    <Compile Include="NetChan\NetChanClientCache.cs" />
+    <Compile Include="NetChan\NetChanClientCacheReceiver.cs" />
+    <Compile Include="NetChan\NetChanClientCacheSender.cs" />
+    <Compile Include="NetChan\NetChanProviderClient.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

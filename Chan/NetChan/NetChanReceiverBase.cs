@@ -9,7 +9,7 @@ namespace Chan
     //of Task, so I can propagate exceptions
     IChan<Task<T>> world = new ChanAsync<Task<T>>();
 
-    protected NetChanReceiverBase(NetChanConfig<T> cfg):base(cfg) {
+    protected NetChanReceiverBase(NetChanConfig<T> cfg) : base(cfg) {
 
     }
 
@@ -51,6 +51,7 @@ namespace Chan
         var tc = new TaskCompletionSource<T>();
 //        if (failed is TaskCanceledException) tc.SetCanceled(); else
         tc.SetException(failed);
+        await SendError(failed.ToString());
         await world.SendAsync(tc.Task);
         throw failed;
       }

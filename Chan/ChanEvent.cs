@@ -6,8 +6,8 @@ namespace Chan
   //consumes channel, invoking event for each message
   //This is the only way to assure that everyone will erceive everything
   public class ChanEvent<TMsg> : IChanBase {
-    IChanReceiver<TMsg> chan;
-    Task over;
+    readonly IChanReceiver<TMsg> chan;
+    readonly Task over;
 
     public event Action<TMsg> ReceivedMessage = x => {};
 
@@ -39,7 +39,9 @@ namespace Chan
       }
       await chan.Close();
     }
+
     #region IChanBase implementation
+
     public async Task Close() {
       await chan.Close();
       await AfterClosed();
@@ -48,6 +50,7 @@ namespace Chan
     public Task AfterClosed() {
       return over;
     }
+
     #endregion
   }
 }
