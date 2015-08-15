@@ -52,6 +52,14 @@ namespace Chan
     }
 
     #endregion
+
+
+  }
+
+  public static class ChanEvent {
+    public static ChanEvent<TMsg> Listen<TMsg>(IChanReceiver<TMsg> chan, Action<TMsg> defaultHandler) {
+      return new ChanEvent<TMsg>(chan, defaultHandler);
+    }
   }
 }
 

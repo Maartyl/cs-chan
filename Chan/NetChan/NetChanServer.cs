@@ -52,8 +52,8 @@ namespace Chan
   }
 
   public class NetChanServer<T> : NetChanServer {
-    readonly HashSet<NetChanSenderServer<T>> senders;
-    readonly HashSet<NetChanReceiverServer<T>> receivers;
+    readonly HashSet<NetChanSenderServer<T>> senders = new HashSet<NetChanSenderServer<T>>();
+    readonly HashSet<NetChanReceiverServer<T>> receivers = new HashSet<NetChanReceiverServer<T>>();
     readonly NetChanConfig<T> config;
     readonly object collectionsLock = new object();
 

@@ -36,10 +36,14 @@ namespace Chan
         await ReceiveBytes(bfr, 0, msgSize, "message data");
         hNext = ReceiveHeader(); //TODO: (only speed) make receive data of packet asynchronously as well
 
+        DbgCns.Trace(this, "on-msg-awaitedK");
+
         //deserialize data nad send to world as OK task
         var ms = new MemoryStream(bfr, 0, msgSize);
         var msg = SerDes.Deserialize(ms);
+        DbgCns.Trace(this, "on-msg-deserK");
         await world.SendAsync(Task.FromResult(msg));
+        DbgCns.Trace(this, "on-msg-worldK");
         await SendSimple(Header.AckFor(h)); //inform sender that msg has been received fine
         await Flush();
         DbgCns.Trace(this, "on-msg-ack-sent");
@@ -47,6 +51,7 @@ namespace Chan
         DbgCns.Trace(this, "on-msg-EX", ex.Message);
         failed = ex;
       }
+      DbgCns.Trace(this, "on-msg3-after-try");
       if (failed != null) {
         var tc = new TaskCompletionSource<T>();
 //        if (failed is TaskCanceledException) tc.SetCanceled(); else
@@ -67,10 +72,12 @@ namespace Chan
     }
 
     public Task<T> ReceiveAsync() {
+      DbgCns.Trace(this, "ReceiveAsync");
       return world.ReceiveAsync().Flatten();
     }
 
     public Task<T> ReceiveAsync(Func<T, Task> sendResult) {
+      DbgCns.Trace(this, "ReceiveAsync2");
       return world.ReceiveAsync(t => t.Bind(sendResult)).Flatten();
     }
 

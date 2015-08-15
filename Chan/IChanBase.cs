@@ -11,10 +11,9 @@ namespace Chan
     Task AfterClosed();
   }
 
-  public interface IChanSender<TMsg> : IChanBase {
+  public interface IChanSender<in TMsg> : IChanBase {
     /// <summary>
-    /// This method BLOCKS until message is enqueued/processed in LOCAL channel.
-    /// It is asynchronous for NETWORK channels.
+    /// Completes when: (local: received / enqueued) (net: sent fine)
     /// </summary>
     /// <returns>Canceled: if channel is closed; Ex if cannot be put to channel for any other reason. Normal on success.</returns>
     /// <param name="msg">the message to send</param>
@@ -28,7 +27,7 @@ namespace Chan
     Task<TMsg> ReceiveAsync(Func<TMsg, Task> sendResult);
   }
 
-  public interface IChan<TMsg> : IChanSender<TMsg>, IChanReceiver<TMsg> { 
+  public interface IChan<TMsg> : IChanSender<TMsg>, IChanReceiver<TMsg> {
 
   }
 }

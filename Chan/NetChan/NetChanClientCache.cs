@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
-  internal abstract class NetChanClientCache<T> { /*where T : class*/
+  internal abstract class NetChanClientCache<T> {
+    /*where T : class*/
     readonly Dictionary<Uri, T> cache = new Dictionary<Uri, T>();
     readonly Dictionary<Uri, Task<T>> connecting = new Dictionary<Uri, Task<T>>();
     readonly object cacheLock = new object();
@@ -28,7 +29,7 @@ namespace Chan
 
     NetChanConnectionInfo RequireInfoFromUri(Uri chan, Binding binding) {
       var chanLocalUri = new UriBuilder(chan);
-      chanLocalUri.Host = "";
+      chanLocalUri.Host = null;
       chanLocalUri.Port = 0;
 
       var serverAddress = new UriBuilder(chan);
@@ -97,24 +98,50 @@ namespace Chan
       return RequireAsync(chanName, binding).Result;
     }
 
-    public T Get(Uri chanName, Binding binding) {
+    public T Get(Uri chan, Binding binding) {
       T data;
       bool isInCache;
       lock (cacheLock)
-        isInCache = cache.TryGetValue(chanName, out data);
+        isInCache = cache.TryGetValue(chan, out data);
 
-      return isInCache ? data : RequireWait(chanName, binding);
+      return isInCache ? data : RequireWait(chan, binding);
     }
 
-    public Task<T> GetAsync(Uri chanName, Binding binding) {
+    public Task<T> GetAsync(Uri chan, Binding binding) {
+      chan = Normalize(chan); // chan name
       T data;
       bool isInCache;
       lock (cacheLock)
-        isInCache = cache.TryGetValue(chanName, out data);
+        isInCache = cache.TryGetValue(chan, out data);
 
-      return isInCache ? Task.FromResult(data) : RequireAsync(chanName, binding);
+      return isInCache ? Task.FromResult(data) : RequireAsync(chan, binding);
     }
     //TODO: forget(Uri) = lock, cache.Remove
+
+    public bool Forget(Uri chan) {
+      lock (cacheLock)
+        return cache.Remove(chan);
+    }
+
+    ///blocks if any still connecting
+    public void Clear() {
+      Func<int> connectingCount = () => {
+        lock (cacheLock)
+          return connecting.Count;
+      };
+      while (connectingCount() != 0)
+        lock (cacheLock)
+          if (connecting.Count != 0)
+            Task.WhenAll(connecting.Values).Wait();
+      lock (cacheLock)
+        cache.Clear();
+    }
+
+    static Uri Normalize(Uri uri) {
+      if (uri.IsLoopback)//==localhost: choose 1 for equality
+        uri = new UriBuilder(uri) { Host = "127.0.0.1" }.Uri;
+      return uri;
+    }
   }
 }
 

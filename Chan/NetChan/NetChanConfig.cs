@@ -12,7 +12,7 @@ namespace Chan
     protected NetChanConfig() {
       //default values
       InitialReceiveBufferSize = 1024;
-      InitialSendBufferSize = 2048;
+      InitialSendBufferSize = 1024;
       PingDelayMs = 60 * 1000;
     }
 
@@ -26,6 +26,13 @@ namespace Chan
 
     public bool PropagateCloseFromReceiver{ get; set; }
     //public int MembraneBufferSize { get; set; } //for world
+
+    public static NetChanConfig<T> MakeDefault<T>() {
+      var cfg = new NetChanConfig<T>();
+      if (cfg.SerDes == null)
+        throw new ArgumentException("Default config: {0} is not Serializable (requires SerDes)".Format(typeof(T)));
+      return cfg;
+    }
   }
 
   public class NetChanConfig<T> : NetChanConfig {

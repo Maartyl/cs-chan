@@ -20,7 +20,8 @@ namespace Chan
 
     private class SerializableWrapper : ISerDes<T> {
       #region ISerDes implementation
-      BinaryFormatter formatter = new BinaryFormatter();
+
+      readonly BinaryFormatter formatter = new BinaryFormatter();
 
       public void Serialize(Stream s, T obj) {
         formatter.Serialize(s, obj);
@@ -29,6 +30,7 @@ namespace Chan
       public T Deserialize(Stream s) {
         return (T) formatter.Deserialize(s);
       }
+
       #endregion
     }
   }

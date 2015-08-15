@@ -156,7 +156,6 @@ namespace Chan
       var buff = receiveBuffer; //retain reference if cleanup frees buffers
       var msgT = ReceiveBytes(buff, 0, msgLen, "ERR message");
 
-      //TODO: perform cleanup (cancel ping, delete stuff, call something virtual, ...)
       RequestCancel();
       //sendBuffer = null;// possibly GC sooner - reference to this object might still exist for quite a while
       //receiveBuffer = null;
@@ -310,7 +309,7 @@ namespace Chan
       public uint Key {
         get{ return Fragment * 256u * 256 + Length; }
         set {
-          var shortMask = 256 * 256 - 1;
+          const int shortMask = 256 * 256 - 1;
           Fragment = (ushort) ((value >> 16)&shortMask);
           Length = (ushort) (value&shortMask);
         }

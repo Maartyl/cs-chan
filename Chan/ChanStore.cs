@@ -27,6 +27,21 @@ namespace Chan
       netChanProviderHost = new ServiceHost(this/*what implements interface*/);
     }
 
+    Binding defaultBinding = new BasicHttpBinding();
+
+    public Binding DefaultBinding {
+      get { return defaultBinding; }
+      set {
+        if (value != null)
+          defaultBinding = value;
+      }
+    }
+
+    public int ConnectingServerTimeout {
+      get { return connectingServerTimeout; }
+      set { connectingServerTimeout = value; }
+    }
+
     #region server start, stop
 
     public void StartServer(Uri address, Binding binding) {
@@ -40,7 +55,7 @@ namespace Chan
     }
 
     public void StartServer(int port) {
-      StartServer(port, new BasicHttpBinding());
+      StartServer(port, defaultBinding);
     }
 
     public void StopServer() {
@@ -137,14 +152,14 @@ namespace Chan
         chanUri, clientBindingsSender, binding, clientSenders).GetSender<T>();
     }
 
-    static T GetClient<TMsg, T, TC>(Uri chanUri, IDictionary<Uri, Binding> dfltB,
-                                    Binding binding, IDictionary<Type, TC> cache) 
+    T GetClient<TMsg, T, TC>(Uri chanUri, IDictionary<Uri, Binding> dfltB,
+                             Binding binding, IDictionary<Type, TC> cache) 
       where TC : NetChanClientCache<T> {
       Binding bindDflt;
       dfltB.TryGetValue(chanUri, out bindDflt); //null is fine: would blow, but potentially unnecessary
       TC factoryCache;
       if (cache.TryGetValue(typeof(TMsg), out factoryCache)) //cache: type -> clientCache -> factory -> ret
-        return factoryCache.Get(chanUri, binding ?? bindDflt);
+        return factoryCache.Get(chanUri, binding ?? bindDflt ?? DefaultBinding);
       throw new InvalidOperationException("Client type not initialized");
     }
 
@@ -159,7 +174,7 @@ namespace Chan
     }
 
     static string normalizeChanName(string name) {
-      return new Uri("chan:" + name).AbsolutePath;
+      return new Uri("chan:" + name).AbsolutePath.TrimStart('/');
     }
 
     #region INetChanProvider implementation
@@ -212,11 +227,12 @@ namespace Chan
       if (chanName.Authority != "")
         throw new ArgumentException("Only local uri can be requested. (is: {0})".Format(chanName));
       ChanBox box;
-      if (!locals.TryGetValue(chanName.AbsolutePath, out box))
-        throw new KeyNotFoundException("No chan registered under: {0}".Format(chanName.AbsolutePath as object));
+      var name = normalizeChanName(chanName.AbsolutePath);
+      if (!locals.TryGetValue(name, out box))
+        throw new KeyNotFoundException("No chan registered under: {0}".Format(name as object));
       if (!box.IsNetChan)
         throw new ArgumentException("Requested chan is only locally accessible. ({0})"
-                                    .Format(chanName.AbsolutePath as object));
+                                    .Format(name as object));
       var s = box.Server;
       if (s.IsClosed)
         throw new InvalidOperationException("Server closed.");
