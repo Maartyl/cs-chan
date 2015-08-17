@@ -24,6 +24,7 @@ namespace Chan
     //int connectionClientTimeout = 40 * 1000;
 
     public ChanStore() {
+      LimitClientIP = true;
       netChanProviderHost = new ServiceHost(this/*what implements interface*/);
     }
 
@@ -102,11 +103,11 @@ namespace Chan
     }
 
     public void RegisterClientSenderBinding(Uri chan, Binding binding) {
-      clientBindingsSender[chan] = binding;
+      clientBindingsSender[NetChanClientCache<Unit>.Normalize(chan)] = binding;
     }
 
     public void RegisterClientReceiverBinding(Uri chan, Binding binding) {
-      clientBindingsReceiver[chan] = binding;
+      clientBindingsReceiver[NetChanClientCache<Unit>.Normalize(chan)] = binding;
     }
 
     #endregion
@@ -165,6 +166,18 @@ namespace Chan
 
     //TODO: free snder/receiver
     //
+    bool Free(Type t, IChanBase chan) {
+      //TODO:
+      return false;
+    }
+
+    public bool Free<T>(IChanSender<T> chan) {
+      return Free(typeof(T), chan);
+    }
+
+    public bool Free<T>(IChanReceiver<T> chan) {
+      return Free(typeof(T), chan);
+    }
 
     static void ChanUriValidation(Uri chanUri) {
       if (chanUri == null)
@@ -179,20 +192,35 @@ namespace Chan
 
     #region INetChanProvider implementation
 
-    Task<TcpClient> NetChanListen(out int port) { 
+    ///true == client has to be on same IP as WCF request
+    ///(default: true)
+    public bool LimitClientIP { get; set; }
+
+    ///this HAS to be called only from within WCF ~handler; 
+    ///uses some WCF global state thing
+    IPAddress AddressToListenOn() {
+      if (!LimitClientIP)
+        return IPAddress.Any;
+
       RemoteEndpointMessageProperty endpointP = //address of sender (who requests chan)
         OperationContext.Current.IncomingMessageProperties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
-      var addr = endpointP == null ? IPAddress.Any : IPAddress.Parse(endpointP.Address);
+      return endpointP == null ? IPAddress.Any : IPAddress.Parse(endpointP.Address);
+    }
+
+    Task<TcpClient> NetChanListen(out int port) { 
+      var addr = AddressToListenOn();
       var listener = new TcpListener(addr, 0);//0 == some not used port
       listener.Start(); //initializes socket and assignes port
       port = ((IPEndPoint) listener.LocalEndpoint).Port;
       return TcpListenerAcceptOne(listener);
     }
 
+    //accepts first tcp-client and closes listener
+    //if no client in connectingServerTimeout: throws
     async Task<TcpClient> TcpListenerAcceptOne(TcpListener listener) {
       var cT = listener.AcceptTcpClientAsync();
       var timeout = Task.Delay(connectingServerTimeout);
-      if (Task.WhenAny(cT, timeout) == timeout)
+      if (await Task.WhenAny(cT, timeout) == timeout)
         throw new TimeoutException("No client connected to listener. (timeout: {0}ms)".Format(connectingServerTimeout));
       var c = await cT;
       listener.Stop();
@@ -252,11 +280,11 @@ namespace Chan
         };
       }
     }
-
+    //WCF handler
     NetChanConnectionInfo INetChanProvider.RequestSender(Uri chanName) {
       return Request(chanName, x => x.StartSenderCounterpart);
     }
-
+    //WCF handler
     NetChanConnectionInfo INetChanProvider.RequestReceiver(Uri chanName) {
       return Request(chanName, x => x.StartReceiverCounterpart);
     }
