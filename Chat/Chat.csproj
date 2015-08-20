@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{21729E15-3667-4692-A0D9-FCCB17E6C1CB}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>Chat</RootNamespace>
     <AssemblyName>Chat</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>

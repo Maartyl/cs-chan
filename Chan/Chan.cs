@@ -5,6 +5,10 @@ namespace Chan
 {
   public static class Chan {
 
+    public static IChan<T> Combine<T>(IChanReceiver<T> r, IChanSender<T> s) {
+      return object.ReferenceEquals(r, s) ? (IChan<T>) r : new ChanCombiner<T>(r, s);
+    }
+
     ///cross-wires 2 channels: returning 2 values through a merging function
     public static T FromChanCrossPair<T, TM, TL, TR>(Func<IChanReceiver<TM>, IChanSender<TM>, TL> fl,
                                                      Func<IChanReceiver<TM>, IChanSender<TM>, TR> fr,
@@ -21,14 +25,15 @@ namespace Chan
     public static async Task Pipe<TR, TS>(this IChanReceiver<TR> rchan, IChanSender<TS> schan,
                                           Func<TR,TS> fmap, bool propagateClose = true, Action<TR> tee = null) {
       if (tee == null)
-        tee = x => {};
+        tee = x => {
+        };
       try {
         while (true)
           tee(await rchan.ReceiveAsync(v => schan.SendAsync(fmap(v))));
       } catch (TaskCanceledException) {
         //pass
       }
-      if (propagateClose) 
+      if (propagateClose)
         await Task.WhenAll(schan.Close(), rchan.Close());
     }
 
@@ -61,6 +66,7 @@ namespace Chan
 
     private class ClosedChan<T> : IChan<T> {
       #region IChanReceiver implementation
+
       public Task<T> ReceiveAsync() {
         var ts = new TaskCompletionSource<T>();
         ts.SetCanceled();
@@ -70,13 +76,19 @@ namespace Chan
       public Task<T> ReceiveAsync(Func<T, Task> sendResult) {
         return ReceiveAsync();
       }
+
       #endregion
+
       #region IChanSender implementation
+
       public Task SendAsync(T msg) {
         return ReceiveAsync();
       }
+
       #endregion
+
       #region IChanBase implementation
+
       public Task Close() {
         return Task.Delay(0);
       }
@@ -84,6 +96,7 @@ namespace Chan
       public Task AfterClosed() {
         return Task.Delay(0);
       }
+
       #endregion
     }
   }

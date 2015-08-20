@@ -22,7 +22,6 @@ namespace Chat
           MainClient(arg);
         }
       }
-
     }
 
     public static void MainServer(int port) {
