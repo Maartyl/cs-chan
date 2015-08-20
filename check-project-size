@@ -1,1 +1,1 @@
-find Chan -name '*.cs' | xargs wc -c | tail -n1
+find Chan Chat -name '*.cs' | xargs wc -c | tail -n1

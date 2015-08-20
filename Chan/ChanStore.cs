@@ -135,32 +135,42 @@ namespace Chan
 
     #endregion
 
+    ///variant ot be used when accessing local chans
     public IChanReceiver<T> GetReceiver<T>(Uri chanUri, Binding binding = null) {
+      return GetReceiverAsync<T>(chanUri, binding).Result;
+    }
+
+    ///variant ot be used when accessing local chans
+    public IChanSender<T> GetSender<T>(Uri chanUri, Binding binding = null) {
+      return GetSenderAsync<T>(chanUri, binding).Result;
+    }
+
+    public async Task<IChanReceiver<T>> GetReceiverAsync<T>(Uri chanUri, Binding binding = null) {
       ChanUriValidation(chanUri);
 
       return chanUri.Authority == "" 
         ? GetLocalReceiver<T>(chanUri.AbsolutePath) 
-          : GetClient<T, IChanReceiverFactory<Unit>, NetChanClientCacheReceiver>(
-        chanUri, clientBindingsReceiver, binding, clientReceivers).GetReceiver<T>();
+          : (await GetClient<T, IChanReceiverFactory<Unit>, NetChanClientCacheReceiver>(
+        chanUri, clientBindingsReceiver, binding, clientReceivers)).GetReceiver<T>();
     }
 
-    public IChanSender<T> GetSender<T>(Uri chanUri, Binding binding = null) {
+    public async Task<IChanSender<T>> GetSenderAsync<T>(Uri chanUri, Binding binding = null) {
       ChanUriValidation(chanUri);
 
       return chanUri.Authority == "" 
         ? GetLocalSender<T>(chanUri.AbsolutePath) 
-          : GetClient<T, IChanSenderFactory<Unit>, NetChanClientCacheSender>(
-        chanUri, clientBindingsSender, binding, clientSenders).GetSender<T>();
+          : (await GetClient<T, IChanSenderFactory<Unit>, NetChanClientCacheSender>(
+        chanUri, clientBindingsSender, binding, clientSenders)).GetSender<T>();
     }
 
-    T GetClient<TMsg, T, TC>(Uri chanUri, IDictionary<Uri, Binding> dfltB,
-                             Binding binding, IDictionary<Type, TC> cache) 
+    Task<T> GetClient<TMsg, T, TC>(Uri chanUri, IDictionary<Uri, Binding> dfltB,
+                                   Binding binding, IDictionary<Type, TC> cache) 
       where TC : NetChanClientCache<T> {
       Binding bindDflt;
       dfltB.TryGetValue(chanUri, out bindDflt); //null is fine: would blow, but potentially unnecessary
       TC factoryCache;
       if (cache.TryGetValue(typeof(TMsg), out factoryCache)) //cache: type -> clientCache -> factory -> ret
-        return factoryCache.Get(chanUri, binding ?? bindDflt ?? DefaultBinding);
+        return factoryCache.GetAsync(chanUri, binding ?? bindDflt ?? DefaultBinding);
       throw new InvalidOperationException("Client type not initialized");
     }
 

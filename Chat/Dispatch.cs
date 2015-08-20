@@ -89,7 +89,7 @@ namespace Chat
   }
 
   public abstract class DispatchDict<TCmd, TArg> : Dispatch<TCmd, TArg> {
-    Dictionary<TCmd, Action<TArg>> commands = new Dictionary<TCmd, Action<TArg>>();
+    readonly Dictionary<TCmd, Action<TArg>> commands = new Dictionary<TCmd, Action<TArg>>();
 
     protected sealed override Action<TArg> Select(TCmd cmd) {
       Action<TArg> a;
@@ -116,7 +116,7 @@ namespace Chat
   }
 
   public class DispatchWithDefault<TCmd, TArg> : DispatchDict<TCmd, TArg> {
-    Action<TCmd, TArg> onDefault;
+    readonly Action<TCmd, TArg> onDefault;
 
     public DispatchWithDefault(Action<TCmd, TArg> onDefault) : base() {
       this.onDefault = onDefault;

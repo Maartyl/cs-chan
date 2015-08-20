@@ -9,9 +9,10 @@ namespace Chat
 
   class MainClass {
     public static void Main(string[] args) {
-      const string msg = "Specify [port] for sender or [addr:port] for client";
+      //const string msg = "Specify [port] for sender or [addr:port] for client";
       if (args.Length == 0) {
-        Console.WriteLine(msg); 
+        //Console.WriteLine(msg); 
+        GuiChat.Start();
       } else {
         var arg = args[0];
         int port;

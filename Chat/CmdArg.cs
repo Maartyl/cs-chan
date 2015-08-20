@@ -2,6 +2,7 @@ using System;
 
 namespace Chat
 {
+  [Serializable]
   public struct CmdArg {
     private CmdArg(string source, string text) : this() {
       Source = source;

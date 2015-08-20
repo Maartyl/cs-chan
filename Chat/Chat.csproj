@@ -45,8 +45,10 @@
     <Compile Include="Dispatch.cs" />
     <Compile Include="Exts.cs" />
     <Compile Include="Gui.cs" />
-    <Compile Include="Program2.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="ChatClient.cs" />
+    <Compile Include="Message.cs" />
+    <Compile Include="GuiChat.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

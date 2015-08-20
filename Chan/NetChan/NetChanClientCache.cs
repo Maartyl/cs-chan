@@ -92,20 +92,20 @@ namespace Chan
         });
     }
 
-    T RequireWait(Uri chanName, Binding binding) {
-      //Yes, async would be better, but I don't want ChanStore.Get{Sender,Receiver} to return Task...
-      //wait until loaded: if loaded here: possible deadlock (thus: Task.Run) - always 'background' thread
-      return RequireAsync(chanName, binding).Result;
-    }
-
-    public T Get(Uri chan, Binding binding) {
-      T data;
-      bool isInCache;
-      lock (cacheLock)
-        isInCache = cache.TryGetValue(chan, out data);
-
-      return isInCache ? data : RequireWait(chan, binding);
-    }
+    //    T RequireWait(Uri chanName, Binding binding) {
+    //      //Yes, async would be better, but I don't want ChanStore.Get{Sender,Receiver} to return Task...
+    //      //wait until loaded: if loaded here: possible deadlock (thus: Task.Run) - always 'background' thread
+    //      return RequireAsync(chanName, binding).Result;
+    //    }
+    //
+    //    public T Get(Uri chan, Binding binding) {
+    //      T data;
+    //      bool isInCache;
+    //      lock (cacheLock)
+    //        isInCache = cache.TryGetValue(chan, out data);
+    //
+    //      return isInCache ? data : RequireWait(chan, binding);
+    //    }
 
     public Task<T> GetAsync(Uri chan, Binding binding) {
       chan = Normalize(chan); // chan name
@@ -116,7 +116,6 @@ namespace Chan
 
       return isInCache ? Task.FromResult(data) : RequireAsync(chan, binding);
     }
-    //TODO: forget(Uri) = lock, cache.Remove
 
     public bool Forget(Uri chan) {
       lock (cacheLock)

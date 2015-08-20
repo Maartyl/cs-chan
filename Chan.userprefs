@@ -1,17 +1,1 @@
-﻿<Properties StartupItem="Chat/Chat.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/ChanStore.cs">
-    <Files>
-      <File FileName="Chan/ChanStore.cs" Line="170" Column="14" />
-      <File FileName="Chat/Program.cs" Line="26" Column="1" />
-      <File FileName="Chan/NetChan/NetChanServer.cs" Line="55" Column="53" />
-      <File FileName="Chan/NetChan/NetChanClientCache.cs" Line="140" Column="70" />
-    </Files>
-  </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
-  </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
-    <Watch file="Chat/Program.cs" line="29" offsetX="384" offsetY="672" expression="s.store.clientReceivers[0].Key" liveUpdate="False" />
-  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
-</Properties>
+﻿<Properties StartupItem="Chat/Chat.csproj" />
