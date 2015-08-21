@@ -91,6 +91,8 @@ namespace Chat
   public abstract class DispatchDict<TCmd, TArg> : Dispatch<TCmd, TArg> {
     readonly Dictionary<TCmd, Action<TArg>> commands = new Dictionary<TCmd, Action<TArg>>();
 
+    public Dictionary<TCmd, Action<TArg>>.KeyCollection Keys{ get { return commands.Keys; } }
+
     protected sealed override Action<TArg> Select(TCmd cmd) {
       Action<TArg> a;
       return (commands.TryGetValue(cmd, out a)) ? a : null;

@@ -8,6 +8,7 @@ namespace Chan
   public class ChanEvent<TMsg> : IChanBase {
     readonly IChanReceiver<TMsg> chan;
     readonly Task over;
+    readonly TaskCompletionSourceEmpty stopListening = new TaskCompletionSourceEmpty();
 
     public event Action<TMsg> ReceivedMessage = x => {};
 
@@ -29,8 +30,13 @@ namespace Chan
 
     async Task startListening() {
       try {
-        while (true) {      
-          ReceivedMessage(await chan.ReceiveAsync());
+        while (true) {  
+          var msgT = chan.ReceiveAsync();
+          var stopT = stopListening.Task;
+          if (stopT == await Task.WhenAny(msgT, stopT))
+            return;
+
+          ReceivedMessage(await msgT);
           DebugCounter.Incg(this, "event");
         }
       } catch (TaskCanceledException) {
@@ -38,6 +44,11 @@ namespace Chan
         DebugCounter.Incg(this, "over");
       }
       await chan.Close();
+    }
+
+    ///Beware: will potentially throw away 'currently awaited' message
+    public void Stop() {
+      stopListening.SetCompleted();
     }
 
     #region IChanBase implementation

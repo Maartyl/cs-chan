@@ -19,9 +19,17 @@ namespace Chat
     public static readonly string ServerStart = "server.start";
     public static readonly string ServerStop = "server.stop";
     public static readonly string Connect = "connect";
-    //public static readonly string Connected = " #connected";
     public static readonly string Disconnect = "disconnect";
     public static readonly string NoCommand = " #nocommand";
+
+    public static readonly string CompletionRequest = " #completion.request";
+    public static readonly string CompletionResponse = " #completion.response";
+
+    public static readonly string CmdAccepted = " #cmd.accepted";
+    public static readonly string CmdParseRun = "parse-run";
+
+    public static readonly string AfterGuiLoaded = " #after-gui-loaded";
+
 
     public static T ParseCommandInto<T>(string line, Func<string, string, T> cmdAndArgsConsumer) {
       var c = cmdAndArgsConsumer;

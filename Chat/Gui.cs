@@ -1,25 +1,23 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace Chat
 {
   public class Gui {
     static readonly Font FONT = new Font("Monospace", 12);
-    Form self;
+    FormWithCompletion self;
     TextBox cmdBar;
     Panel area;
     RichTextBox msgBoard;
     Views views = new Views();
-    //TaskScheduler context = TaskScheduler.FromCurrentSynchronizationContext();
-    /// (cmdName, cmdArgs) -> ok?
-    public event Func<string, string, bool> Command = (cmd,arg) => (false);
+
+    public event Action<string> Command = cmd => {};
+    public event Action<string> CompletionRequest = cmd => {};
     public event Action BoardChanged = () => {};
 
     public Gui(Action<Gui> onLoad) {
-      self = new Form();
+      self = new FormWithCompletion();
 
       area = new Panel();
       area.Dock = DockStyle.Fill;
@@ -31,7 +29,8 @@ namespace Chat
       cmdBar.Font = FONT;
       cmdBar.Dock = DockStyle.Bottom;
       cmdBar.BorderStyle = BorderStyle.None;
-      cmdBar.KeyPress += onCmdBarKeyPressIfEnter;
+      cmdBar.AcceptsTab = true;
+      cmdBar.KeyPress += onCmdBarKeyPress;
 
       msgBoard = new RichTextBox();
       msgBoard.Font = FONT;
@@ -43,6 +42,8 @@ namespace Chat
 
       self.Controls.Add(cmdBar);
       self.Controls.Add(area);
+
+      self.CompletionKeyPressed += () => CompletionRequest(cmdBar.Text);
 
       self.Load += (src, ea) => onLoad(this);
 
@@ -102,6 +103,7 @@ namespace Chat
       BoardChanged();
     }
 
+    //show 'information' from system (not error, not message)
     public void ShowNotifySystem(string sender, string message) {
       if (sender == null) {
         MsgBoardAppendColored(message + "\n", Color.Green);
@@ -118,28 +120,41 @@ namespace Chat
       msgBoard.ScrollToCaret();
     }
 
+    public void ClearCmdLineIfSame(string orig) {
+      //if it took long, user could loose changes
+      PushCompletion("", orig);
+    }
+
+    public void PushCompletion(string cmdText, string orig) {
+      //changes cmdBar if not changed by user meanwhile
+      if (cmdBar.Text == orig) {
+        cmdBar.Text = cmdText;
+        cmdBar.Select(cmdText.Length, 0); //move cursor to end of line
+      }
+    }
+
     public void Exit() {
       self.Close();
     }
 
-    /// Well, this doesn't work: it's captured in async context, not the same as last Task...
-    //private Task GuiContext { get { return Task.WhenAll().ContinueWith(t => {}, context); } }
-
     public Action<T> InSTAThread<T>(Action<T> fn) {
-      return t => self.BeginInvoke(fn, t);
+      return t => {
+        if (self.InvokeRequired)
+          self.BeginInvoke(fn, t);
+        else
+          fn(t);
+      };
     }
 
-    private void onCmdBarKeyPressIfEnter(object sender, KeyPressEventArgs e) {
-      var orig = cmdBar.Text;
-      if (e.KeyChar == (char) Keys.Return) 
-        if (Cmd.ParseCommandInto(cmdBar.Text, Command))
-          if (cmdBar.Text == orig)//if it took long, user could loose changes //should be synchronized, but...
-            cmdBar.Text = ""; //TODO: consider: this entire feedback is possibly ridiculous...
+    void onCmdBarKeyPress(object sender, KeyPressEventArgs e) {
+      if (e.KeyChar == (char) Keys.Return)
+        Command(cmdBar.Text);
     }
 
     [STAThread]
     public static void Start(Action<Gui> onLoad) {
       Application.EnableVisualStyles();
+
       Application.Run(new Gui(onLoad).self);
     }
 
@@ -155,6 +170,20 @@ namespace Chat
         tb.ReadOnly = true;
         tb.Text = @"No help provided yet: incorrect state";
         Help = tb;
+      }
+    }
+
+    class FormWithCompletion : Form {
+      public event Action CompletionKeyPressed = ()=>{};
+
+      //to capture Tab I need to override this: thus I had to subclass Form
+      //it works everywhere in the form
+      protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, Keys keyData) {
+        if (keyData == Keys.Tab) {
+          CompletionKeyPressed();
+          return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
       }
     }
   }

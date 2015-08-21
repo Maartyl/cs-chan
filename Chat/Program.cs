@@ -6,6 +6,8 @@ using Chan;
 namespace Chat
 {
   //TODO: first 2 msgs lost at client if Broadcast
+  // - actually, it just might be that it takes a while...
+  // - but something is definitely fishy
 
   class MainClass {
     public static void Main(string[] args) {

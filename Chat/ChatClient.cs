@@ -124,10 +124,15 @@ namespace Chat
         }
 
         //receive messages loop
-        ChanEvent.Listen(chans.Broadcast, ReceiveMessage);
+        var ce = ChanEvent.Listen(chans.Broadcast, ReceiveMessage);
+        chans.MetaEvent = ce;
 
         //inform: client connected
         BroadcastMessage(new Message(Message.MessageType.Connected, "".ArgSrc(ClientName))); 
+
+        chans.BsReceiver.AfterClosed().ContinueWith(t => {
+          connector.RunNotifySystem("channel closed".ArgSrc(addr));
+        });
 
       } catch (EndpointNotFoundException) {
         connector.RunError("no server found".ArgSrc("connect " + addr));
@@ -165,6 +170,7 @@ namespace Chat
       var msg = new Message(Message.MessageType.Disconnected, "".ArgSrc(ClientName));
       BroadcastMessage(msg, t => {
         state = State.Disconnected;
+        chans.MetaEvent.Stop();
         chans = chans.Free(store, connector);
       });
     }
@@ -215,17 +221,19 @@ namespace Chat
     struct ConnectionChans {
       public IChan<Message> Broadcast{ get; private set; }
 
-      IChanSender<Message> bsSender{ get; set; }
+      public IChanSender<Message> BsSender{ get; private set; }
 
-      IChanReceiver<Message> bsReceiver{ get; set; }
+      public IChanReceiver<Message> BsReceiver{ get; private set; }
 
       //meta data: address used to connect
       public string MetaAddr{ get; set; }
 
+      public ChanEvent<Message> MetaEvent { get; set; }
+
       public ConnectionChans Free(ChanStore store, Connector conn) {
-        Broadcast.Close().PipeEx(conn, "closing channel (" + MetaAddr + ")");
-        store.Free(bsSender);
-        store.Free(bsReceiver);
+        //BsReceiver.Close().PipeEx(conn, "closing receiver (" + MetaAddr + ")");
+        store.Free(BsSender);
+        store.Free(BsReceiver);
         return new ConnectionChans{ };
       }
 
@@ -234,7 +242,7 @@ namespace Chat
         var rT = store.GetReceiverAsync<Message>(broadcast);
         var sT = store.GetSenderAsync<Message>(broadcast);
         var k = Chan.Chan.Combine(await rT, await sT);
-        return new ConnectionChans{ Broadcast = k, bsSender = await sT, bsReceiver = await rT };
+        return new ConnectionChans{ Broadcast = k, BsSender = await sT, BsReceiver = await rT };
       }
     }
   }
