@@ -7,24 +7,25 @@ using System.ServiceModel;
 namespace Chat
 {
   public class ChatClient {
-    string clientName;
     readonly Settings settings;
     readonly ChanStore store;
     readonly Connector connector;
     volatile State state = State.Disconnected;
     Action afterConnected;
-    ConnectionChans cchans;
+    ConnectionChans chans;
 
     public ChatClient(Settings settings, ChanStore store, Connector connector) {
       this.settings = settings;
       this.connector = connector;
       this.store = store;
-      clientName = settings.ClientDefaultName;
+      ClientName = settings.ClientDefaultName;
     }
+
+    public string ClientName { get; set; }
 
     Task Send(Message msg) {
       var s = state;
-      var bc = cchans.Broadcast;
+      var bc = chans.Broadcast;
       if (s == State.Connected && bc != null)
         return bc.SendAsync(msg);
       else
@@ -38,7 +39,7 @@ namespace Chat
         //check state
         switch (state) {
           case State.Connected:
-            connector.RunError("already connected (" + cchans.MetaAddr + ")".ArgSrc("connect"));
+            connector.RunError("already connected (" + chans.MetaAddr + ")".ArgSrc("connect"));
             return;
           case State.Connecting:
             connector.RunNotifySystem("connecting...".ArgSrc("connect"));
@@ -82,13 +83,20 @@ namespace Chat
         //connecting itself 
         state = State.Connecting;
         try {
-          cchans = await ConnectionChans.Connect(store, path);
-          cchans.MetaAddr = addr;
+          chans = await ConnectionChans.Connect(store, path);
+          chans.MetaAddr = addr;
           cleanConnecting(State.Connected);
         } catch (Exception) {
           cleanConnecting(State.ConnectingFailed);
           throw;
         }
+
+        //receive messages loop
+        ChanEvent.Listen(chans.Broadcast, ReceiveMessage);
+
+        //inform: client connected
+        BroadcastMessage(new Message(Message.MessageType.Connected, "".ArgSrc(ClientName))); 
+
       } catch (EndpointNotFoundException ex) {
         connector.RunError("no server found".ArgSrc("connect " + addr));
       } catch (Exception ex) {
@@ -99,15 +107,36 @@ namespace Chat
       }
     }
 
-    public void Disconnect() {
-      state = State.Disconnected;
-      cchans = cchans.Free(store);
+    //used from ChanEvent
+    void ReceiveMessage(Message msg) {
+      switch (msg.Type) {
+        case Message.Type.Message:
+          connector.RunOrDefault(Cmd.ReceivedMsg, msg.Data);
+          return;
+        case Message.Type.Connected:
+          //someone has conected: notify
+          //POSSIBLY: improve (better msg; consider text...)
+          connector.RunNotifySystem(msg.Data.Source.ArgSrc("connected"));
+          return;
+        case Message.Type.Disconnected:
+          //someone has disconected: notify
+          connector.RunNotifySystem(msg.Data.Source.ArgSrc("disconnected"));
+          return;
+      }
     }
 
-    public void BroadcastMessage(Message msg) {
+    public void Disconnect() {
+      var msg = new Message(Message.MessageType.Disconnected, "".ArgSrc(ClientName));
+      BroadcastMessage(msg, t => {
+        state = State.Disconnected;
+        chans = chans.Free(store, connector);
+      });
+    }
+
+    public void BroadcastMessage(Message msg, Action<Task> afterSent = null) {
       switch (state) {
         case State.Connected:
-          connector.PipeEx("ChatClient.BcMsg", Send(msg));
+          connector.PipeEx("ChatClient.BcMsg", Send(msg).ContinueWith(afterSent));
           return;
         case State.Connecting:
           connector.RunNotifySystem("connecting...".ArgSrc(Cmd.Send));
@@ -115,7 +144,11 @@ namespace Chat
           Action merged;
           do {
             orig = afterConnected;
-            merged = orig + (() => BroadcastMessage(msg));
+            merged = orig + (() => BroadcastMessage(msg, afterSent));
+            if (state != State.Connecting) {
+              BroadcastMessage(msg, afterSent);
+              return;
+            }
           } while (orig != Interlocked.CompareExchange(ref afterConnected, merged, orig));
           return;
         case State.ConnectingFailed:
@@ -129,7 +162,7 @@ namespace Chat
 
     public void BroadcastMessage(CmdArg msg) {
       if (msg.Source == null)
-        msg = msg.Text.ArgSrc(clientName);
+        msg = msg.Text.ArgSrc(ClientName);
       BroadcastMessage(new Message(msg));
     }
 
@@ -150,7 +183,8 @@ namespace Chat
       //meta data: address used to connect
       public string MetaAddr{ get; set; }
 
-      public ConnectionChans Free(ChanStore store) {
+      public ConnectionChans Free(ChanStore store, Connector conn) {
+        Broadcast.Close().PipeEx(conn, "closing channel (" + MetaAddr + ")");
         store.Free(bsSender);
         store.Free(bsReceiver);
         return new ConnectionChans{ };
