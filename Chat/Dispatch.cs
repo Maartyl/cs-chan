@@ -4,7 +4,21 @@ using System.Threading.Tasks;
 
 namespace Chat
 {
-  public abstract class Dispatch<TCmd, TArg> {
+  public abstract class Dispatch {
+    public enum RegisterOpts {
+      Add,
+      Replace,
+      Merge
+    }
+
+    [Flags] public enum RunErrOpts {
+      InformsOnly = 0,
+      Defaults = 1,
+      Throws = 2
+    }
+  }
+
+  public abstract class Dispatch<TCmd, TArg> : Dispatch {
 
     protected abstract Action<TArg> Select(TCmd cmd);
 
@@ -62,18 +76,6 @@ namespace Chat
 
     public Task<bool> RunOrDefaultAsync(TCmd cmd, TArg arg) {
       return RunAsync(cmd, arg, RunErrOpts.Defaults);
-    }
-
-    public enum RegisterOpts {
-      Add,
-      Replace,
-      Merge
-    }
-
-    [Flags] public enum RunErrOpts {
-      InformsOnly = 0,
-      Defaults = 1,
-      Throws = 2
     }
 
     public class NoSuchCmdException : KeyNotFoundException {

@@ -19,12 +19,8 @@ namespace Chat
       }
       //---
       //MAYBE: support ops that change settings
-      var settings = new Settings();
-      GuiChat.Start(settings, (conn, store) => {
+      GuiChat.Start(new Settings(), (conn, store) => {
         //this is run after loaded gui
-        //can start server based on console args / .....
-        if (args.Length == 0)
-          return;
         //I will use this fn to execute program arguments
         //i.e. : any arguments will be interpreted as commands written in gui
         foreach (var arg in args)

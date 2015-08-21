@@ -15,6 +15,7 @@ namespace Chat
     public static readonly string ScrollDown = "down";
     public static readonly string ReceivedMsg = "receivedMsg";
     public static readonly string Host = "host";
+    public static readonly string Join = "join";
     public static readonly string Server = "server";
     public static readonly string ServerStart = "server.start";
     public static readonly string ServerStop = "server.stop";
