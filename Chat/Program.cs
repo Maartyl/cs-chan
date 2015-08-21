@@ -12,7 +12,13 @@ namespace Chat
       //const string msg = "Specify [port] for sender or [addr:port] for client";
       if (args.Length == 0) {
         //Console.WriteLine(msg); 
-        GuiChat.Start();
+        var settings = new Settings();
+        Action<Connector, ChanStore> emptyInit = (conn, store) => {
+          //this is run after loaded gui
+          //can start server based on console args / .....
+        };
+
+        GuiChat.Start(settings, emptyInit);
       } else {
         var arg = args[0];
         int port;

@@ -47,12 +47,12 @@ namespace Chat
       return false;
     }
 
-    private Task CoreInvokeSynchronously(Action<TArg>a, TArg arg) {
+    private static Task CoreInvokeSynchronously(Action<TArg>a, TArg arg) {
       a(arg);
       return Task.WhenAll();
     }
 
-    private Task CoreInvokeAsynchronously(Action<TArg>a, TArg arg) {
+    private static Task CoreInvokeAsynchronously(Action<TArg>a, TArg arg) {
       return Task.Run(() => a(arg));
     }
 
@@ -110,7 +110,7 @@ namespace Chat
         var a = Select(cmd);
         if (a != null && opts == RegisterOpts.Add)
           throw new ArgumentException("Command already registered:" + cmd);
-        RegisterImpl(cmd, a == null ? handler : a + handler, RegisterOpts.Replace);
+        RegisterImpl(cmd, a + handler, RegisterOpts.Replace);
       }
     }
   }

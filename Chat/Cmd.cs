@@ -8,6 +8,7 @@ namespace Chat
     public static readonly string Chat = "chat";
     public static readonly string Send = "send";
     public static readonly string Text = "text";
+    public static readonly string Name = "name";
     public static readonly string NotifyError = "notifyError";
     public static readonly string NotifySystem = "notifySystem";
     public static readonly string Exit = "exit";
@@ -15,8 +16,10 @@ namespace Chat
     public static readonly string ReceivedMsg = "receivedMsg";
     public static readonly string Host = "host";
     public static readonly string Server = "server";
+    public static readonly string ServerStart = "server.start";
+    public static readonly string ServerStop = "server.stop";
     public static readonly string Connect = "connect";
-    public static readonly string Connected = " #connected";
+    //public static readonly string Connected = " #connected";
     public static readonly string Disconnect = "disconnect";
     public static readonly string NoCommand = " #nocommand";
 
@@ -36,12 +39,12 @@ i.e.
 ':a ' -> a, null
 ':a  '-> a, ' '
        */
-      if (!string.IsNullOrWhiteSpace(line) 
-        && line[0] == Settings.UserCommandStart) {
+      if (!string.IsNullOrWhiteSpace(line)
+          && line[0] == Settings.UserCommandStart) {
         line = line.Substring(1);
         if (string.IsNullOrEmpty(line))
           return c(null, null);
-        if (char.IsWhiteSpace(line[0])) 
+        if (char.IsWhiteSpace(line[0]))
           return c(null, line.Length == 1 ? null : line.Substring(1));
 
         var ln = line.Split((char[]) null/*whitespace*/, 2, StringSplitOptions.None);

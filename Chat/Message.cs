@@ -21,7 +21,8 @@ namespace Chat
     public enum MessageType {
       Connected,
       Disconnected,
-      Message
+      Message,
+      SysMessage
     }
   }
 }

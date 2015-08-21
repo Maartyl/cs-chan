@@ -24,7 +24,10 @@ namespace Chan
       var s = c.GetStream();
       var client = new NetChanSenderClient<T>(defaultConfig.Clone(s, s));
       clientStarts.Add(client.Start(info.Key));
-      return Chan.FactoryFor(info.Type, null/*no receiver*/, client);
+
+      var noReceiver = new ChanAsync<T>();
+      //cannot use null, because broadcast factory uses ChanEvent which requires chan to wait on
+      return Chan.FactoryFor(info.Type, noReceiver, client);
     }
   }
 }
