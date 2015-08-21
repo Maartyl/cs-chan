@@ -11,42 +11,52 @@ namespace Chat
 
   class MainClass {
     public static void Main(string[] args) {
-      //const string msg = "Specify [port] for sender or [addr:port] for client";
-      if (args.Length == 0) {
+      if (args.Length == 2 && args[0] == "--simple") {
+        //const string msg = "Specify [port] for sender or [addr:port] for client";
         //Console.WriteLine(msg); 
-        var settings = new Settings();
-        Action<Connector, ChanStore> emptyInit = (conn, store) => {
-          //this is run after loaded gui
-          //can start server based on console args / .....
-        };
+        MainSimple(args[1]);
+        return;
+      }
+      //---
+      //MAYBE: support ops that change settings
+      var settings = new Settings();
+      GuiChat.Start(settings, (conn, store) => {
+        //this is run after loaded gui
+        //can start server based on console args / .....
+        if (args.Length == 0)
+          return;
+        //I will use this fn to execute program arguments
+        //i.e. : any arguments will be interpreted as commands written in gui
+        foreach (var arg in args)
+          conn.RunOrDefault(Cmd.CmdParseRun, arg);
+      });
+    }
 
-        GuiChat.Start(settings, emptyInit);
+    //this is for simple Chan testing
+    public static void MainSimple(string arg) {
+      int port;
+      if (int.TryParse(arg, out port)) {
+        SimpleServer(port);
       } else {
-        var arg = args[0];
-        int port;
-        if (int.TryParse(arg, out port)) {
-          MainServer(port);
-        } else {
-          MainClient(arg);
-        }
+        SimpleClient(arg);
       }
     }
 
-    public static void MainServer(int port) {
+    public static void SimpleServer(int port) {
       var s = Server.Start(port);
-      var t = ReadLoop(s);
+      var t = SimpleReadLoop(s);
       Task.WaitAny(s.Task, t);
       s.Close().Wait();
     }
 
-    public static void MainClient(string server_endpoint) {
+    public static void SimpleClient(string server_endpoint) {
       var s = Client.Start(server_endpoint);
-      var t = ReadLoop(s);
+      var t = SimpleReadLoop(s);
       Task.WaitAny(s.Task, t);
       s.Close().Wait();
     }
 
-    static async Task ReadLoop(SimpleSC s) {
+    static async Task SimpleReadLoop(SimpleSC s) {
       await Task.Yield();
       while (true) {
         var str = Console.ReadLine();

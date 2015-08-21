@@ -19,6 +19,8 @@ namespace Chat
     public Gui(Action<Gui> onLoad) {
       self = new FormWithCompletion();
 
+      self.Text = "Chan Chat";
+
       area = new Panel();
       area.Dock = DockStyle.Fill;
       area.BorderStyle = BorderStyle.None;
