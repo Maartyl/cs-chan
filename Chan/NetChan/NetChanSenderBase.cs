@@ -8,7 +8,7 @@ namespace Chan
   public abstract class NetChanSenderBase<T> : NetChanTBase<T>, IChanSender<T> {
     readonly IChan<DataWithErrorInfo> world = new ChanAsync<DataWithErrorInfo>();
 
-    protected NetChanSenderBase(NetChanConfig<T> cfg):base(cfg) {
+    protected NetChanSenderBase(NetChanConfig<T> cfg) : base(cfg) {
 
     }
 
@@ -28,9 +28,8 @@ namespace Chan
         DbgCns.Trace(this, "start-sender-EX");
       }
       if (failed != null) {
-        //continue catch clause outside of it: cannot contain await (sadly without rethrow)
+        //continue catch clause outside of it: cannot contain await (sadly without rethrow; makes sense, though)
         await CancelWorld(failed);
-        //TODO: cleanup
         throw failed;
       }
       DbgCns.Trace(this, "start-senderE1");
@@ -120,7 +119,9 @@ namespace Chan
       await endT;
       DbgCns.Trace(this, "cwE");
     }
+
     #region implemented abstract members of NetChanBase
+
     protected override Task<Header> OnMsgReceived(Header h) {
       DbgCns.Trace(this, "on-msg");
       throw new InvalidOperationException("MSG received in Sender");
@@ -140,7 +141,9 @@ namespace Chan
       // solved in StartSender : when world closes: so will PipeWorldSender (and this: receiver)
       // after that: StartSender calls Close on this.
     }
+
     #endregion
+
     public async Task SendAsync(T msg) {
       //this task finshes when message has been succesfully sent: not received
       DbgCns.Trace(this, "senda0");

@@ -17,6 +17,15 @@ namespace Chat
       
     }
 
+    public override string ToString() {
+      switch (Type) {
+        case MessageType.Message:
+          return Data.ToString();
+        default:
+          return string.Format("[Msg({0}): {1}]", Type, Data);
+      }
+    }
+
     [Serializable]
     public enum MessageType {
       Connected,

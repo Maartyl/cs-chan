@@ -27,6 +27,12 @@ namespace Chat
       return Of(src, txt);
     }
 
+    public override string ToString() {
+      if (string.IsNullOrWhiteSpace(Source))
+        return Text;
+      return Text + " @" + Source;
+    }
+
     public static implicit operator CmdArg(string text) {
       return Of(text);
     }

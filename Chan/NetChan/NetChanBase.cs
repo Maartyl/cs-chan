@@ -101,7 +101,8 @@ namespace Chan
             default:
               h = await OnDefaultReceived(h);
             break;
-          //TODO: add OnEndReceived
+          //POSSIBLY TODO: add OnEndReceived (i.e.: end without close)
+          // - not supported for now: instead: option to clos 'upper' part if this closed or not
           }
       } catch (TaskCanceledException) {
         DbgCns.Trace(this, "r-loop-cancel");

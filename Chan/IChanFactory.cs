@@ -20,7 +20,7 @@ namespace Chan
     IChanReceiver<T> GetReceiver<T>(TCtor ctorData);
   }
   //non-generic to be used in dicts
-  //TODO: factory is maybe not a good name: often returns the same...
+  //POSSIBLY: factory is maybe not a good name: often returns the same...
   public interface IChanFactory<TCtor> :  IChanSenderFactory<TCtor>, IChanReceiverFactory<TCtor> {
 
   }
@@ -78,8 +78,8 @@ namespace Chan
   }
   //only wraps: does not provide broadcast
   public class ChanFactoryWrap<T> : ChanFactory<T, Unit> {
-    IChanReceiver<T> chanR;
-    IChanSender<T> chanS;
+    readonly IChanReceiver<T> chanR;
+    readonly IChanSender<T> chanS;
 
     public ChanFactoryWrap(IChanReceiver<T> chanR, IChanSender<T> chanS) {
       this.chanR = chanR;
@@ -91,6 +91,26 @@ namespace Chan
     }
 
     #region implemented abstract members of ChanFactory
+
+    protected override Task CloseOnce() {
+      /*(match [chanR chanS] 
+       * [nil nil] (Task/Delay 0)
+       * [nil s] (.Close s)
+       * [r nil] (.Close r)
+       * [c c] (.Close c)
+       * [r s] (Task/WhenAll (.Close r) (.Close s)))
+       */
+
+      return chanR == null 
+        ? chanS == null 
+          ? Task.Delay(0) //neither
+          : chanS.Close() //only S
+        : chanS == null 
+          ? chanR.Close() //only R
+          : chanR == chanS 
+            ? chanR.Close() //both the same
+            : Task.WhenAll(chanR.Close(), chanS.Close()); //both
+    }
 
     public override IChanReceiver<T> GetReceiver(Unit ctorData) {
       return chanR;
@@ -124,10 +144,16 @@ namespace Chan
       drain.Consume(chanR.AfterClosed().ContinueWith(t => {
         closedAndEmpty = true; //close all receivers and consume exceptions
         drain.Consume(Task.WhenAll(receivers.Select(kv => kv.Key.Close())));
+        drain.EndOk();
       }));
     }
 
     #region implemented abstract members of ChanFactory
+
+    protected override Task CloseOnce() {
+      var ecT = evt.Close();
+      return chanS == null ? Task.WhenAll(drain.Task, ecT) : Task.WhenAll(drain.Task, ecT, chanS.Close());
+    }
 
     public override IChanReceiver<T> GetReceiver(Unit ctorData) {
       if (closedAndEmpty)

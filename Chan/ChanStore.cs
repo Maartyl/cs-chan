@@ -4,7 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.ServiceModel.Channels;
 using System.ServiceModel;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.ServiceModel.Description;
@@ -34,7 +33,8 @@ namespace Chan
       netChanProviderHost = new ServiceHost(this/*what implements interface*/, wsdlPort > 0 ? new[] {
         new Uri("http://" + Environment.MachineName + ":" + wsdlPort + "/ChanStore")
       } : new Uri[]{ });
-      netChanProviderHost.Description.Behaviors.Add(new ServiceMetadataBehavior{ HttpGetEnabled = true });
+      if (wsdlPort > 0)
+        netChanProviderHost.Description.Behaviors.Add(new ServiceMetadataBehavior{ HttpGetEnabled = true });
     }
 
     public ChanStore() : this(-1) {
