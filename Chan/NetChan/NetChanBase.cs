@@ -39,7 +39,6 @@ namespace Chan
         if (h.Key != key) {
           DbgCns.Trace(this, "handshake-srv-wrong-key", key + "/" + h.Key);
           await SendError("wrong key");
-          //TODO: decide: safe to put keys in err msg? - it's just something random...
           throw new AccessViolationException("expected and provided key don't match (Expected: " + key + ", Got:" + h.Key + ")");
         }
         await SendSimple(Header.AckFor(h));

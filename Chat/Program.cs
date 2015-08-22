@@ -26,6 +26,8 @@ namespace Chat
         foreach (var arg in args)
           conn.RunOrDefault(Cmd.CmdParseRun, arg);
       });
+
+      Console.Error.WriteLine("main-thread exit"); //server hangs waiting
     }
 
     //this is for simple Chan testing
@@ -66,7 +68,7 @@ namespace Chat
   }
 
   interface SimpleSC {
-    Task Task{ get; }
+    Task Task { get; }
 
     Task Send(string msg);
 
@@ -133,10 +135,7 @@ namespace Chat
     ChanStore store = new ChanStore();
 
 
-    protected IChanSender<string> Sender {
-      get;
-      set;
-    }
+    protected IChanSender<string> Sender { get; set; }
 
     public Task Send(string msg) {
       return Sender.SendAsync(msg);
@@ -146,10 +145,7 @@ namespace Chat
       return Sender.Close();
     }
 
-    public Task Task {
-      get;
-      private set;
-    }
+    public Task Task { get; private set; }
 
     public static Client Start(string host) {
       //local should be 0.0.0.0

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Reflection;
@@ -122,6 +123,7 @@ namespace Chan
         return cache.Remove(chan);
     }
 
+
     ///blocks if any still connecting
     public void Clear() {
       Func<int> connectingCount = () => {
@@ -134,6 +136,11 @@ namespace Chan
             Task.WhenAll(connecting.Values).Wait();
       lock (cacheLock)
         cache.Clear();
+    }
+
+    public IEnumerable<T> All() {
+      lock (cacheLock)
+        return cache.Values.ToList();
     }
 
     //TODO: move this outside to not enforce dependency on this class

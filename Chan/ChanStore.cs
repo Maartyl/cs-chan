@@ -7,6 +7,7 @@ using System.ServiceModel;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.ServiceModel.Description;
 
 namespace Chan
 {
@@ -19,13 +20,25 @@ namespace Chan
     readonly Dictionary<Type, NetChanClientCacheSender> clientSenders = new Dictionary<Type, NetChanClientCacheSender>();
     readonly Dictionary<Uri, Binding> clientBindingsSender = new Dictionary<Uri, Binding>();
     readonly Dictionary<Uri, Binding> clientBindingsReceiver = new Dictionary<Uri, Binding>();
+    readonly Dictionary<IChanBase, Func<bool>> freeChans = new Dictionary<IChanBase, Func<bool>>();
     readonly ServiceHost netChanProviderHost;
     int connectingServerTimeout = 30 * 1000;
-    //int connectionClientTimeout = 40 * 1000;
 
-    public ChanStore() {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Chan.ChanStore"/> class.
+    /// Wsdl is at :[wsdlPort]/ChanStore if specified
+    /// </summary>
+    /// <param name="wsdlPort">default: -1 == no wsdl</param>
+    public ChanStore(int wsdlPort) {
       LimitClientIP = true;
-      netChanProviderHost = new ServiceHost(this/*what implements interface*/);
+      netChanProviderHost = new ServiceHost(this/*what implements interface*/, wsdlPort > 0 ? new[] {
+        new Uri("http://" + Environment.MachineName + ":" + wsdlPort + "/ChanStore")
+      } : new Uri[]{ });
+      netChanProviderHost.Description.Behaviors.Add(new ServiceMetadataBehavior{ HttpGetEnabled = true });
+    }
+
+    public ChanStore() : this(-1) {
+      
     }
 
     Binding defaultBinding = new BasicHttpBinding();
@@ -33,8 +46,7 @@ namespace Chan
     public Binding DefaultBinding {
       get { return defaultBinding; }
       set {
-        if (value != null)
-          defaultBinding = value;
+        if (value != null) defaultBinding = value;
       }
     }
 
@@ -114,17 +126,17 @@ namespace Chan
 
     #region get local
 
-    static TR GetWrongTypeThrow<T, TR>(Type actualGenericType) { 
+    static TR GetWrongTypeThrow<T, TR>(Type actualGenericType) {
       throw new ArgumentException("wrong chan type({0}); actual: {1}".Format(
         typeof(T), actualGenericType.Name));
     }
 
-    IChanReceiver<T> GetLocalReceiver<T>(string chanName) {
-      return GetLocalGeneric<T,IChanReceiver<T>>(chanName, Exts.GetReceiver<T>);
+    IChanReceiver<T> GetLocalReceiver<T>(string chanName) { 
+      return GetLocalGeneric<T,IChanReceiver<T>>(chanName, GetReceiverAndRememberToFree<T>);
     }
 
     IChanSender<T> GetLocalSender<T>(string chanName) {
-      return GetLocalGeneric<T,IChanSender<T>>(chanName, Exts.GetSender<T>);
+      return GetLocalGeneric<T,IChanSender<T>>(chanName, GetSenderAndRememberToFree<T>);
     }
 
     TC GetLocalGeneric<T, TC>(string chanName, Func<IChanFactory<Unit>, TC> getChan) where TC : class {
@@ -135,14 +147,39 @@ namespace Chan
 
     #endregion
 
-    ///variant ot be used when accessing local chans
-    public IChanReceiver<T> GetReceiver<T>(Uri chanUri, Binding binding = null) {
-      return GetReceiverAsync<T>(chanUri, binding).Result;
+    //saves in freeChans map: called from Free
+    //thanks to this, I don't have to look for it later...
+    void RememberToFree(IChanFactoryBase f, IChanBase chan) {
+      lock (freeChans)
+        freeChans[chan] = () => {
+          var ret = f.Free(chan);
+          if (ret)
+            lock (freeChans)
+              freeChans.Remove(chan); //remove from non-freed (if got freed)
+          return ret; //free the chan;
+        };
+    }
+
+    IChanSender<T> GetSenderAndRememberToFree<T>(IChanSenderFactory<Unit> f) { 
+      var chan = f.GetSender<T>();
+      RememberToFree(f, chan);
+      return chan;
+    }
+
+    IChanReceiver<T> GetReceiverAndRememberToFree<T>(IChanReceiverFactory<Unit> f) { 
+      var chan = f.GetReceiver<T>();
+      RememberToFree(f, chan);
+      return chan;
     }
 
     ///variant ot be used when accessing local chans
-    public IChanSender<T> GetSender<T>(Uri chanUri, Binding binding = null) {
-      return GetSenderAsync<T>(chanUri, binding).Result;
+    public IChanReceiver<T> GetReceiver<T>(Uri chanUri) {
+      return GetReceiverAsync<T>(chanUri).Result;
+    }
+
+    ///variant ot be used when accessing local chans
+    public IChanSender<T> GetSender<T>(Uri chanUri) {
+      return GetSenderAsync<T>(chanUri).Result;
     }
 
     public async Task<IChanReceiver<T>> GetReceiverAsync<T>(Uri chanUri, Binding binding = null) {
@@ -150,8 +187,8 @@ namespace Chan
 
       return chanUri.Authority == "" 
         ? GetLocalReceiver<T>(chanUri.AbsolutePath) 
-          : (await GetClient<T, IChanReceiverFactory<Unit>, NetChanClientCacheReceiver>(
-        chanUri, clientBindingsReceiver, binding, clientReceivers)).GetReceiver<T>();
+          : GetReceiverAndRememberToFree<T>(await GetClient<T, IChanReceiverFactory<Unit>, NetChanClientCacheReceiver>(
+        chanUri, clientBindingsReceiver, binding, clientReceivers));
     }
 
     public async Task<IChanSender<T>> GetSenderAsync<T>(Uri chanUri, Binding binding = null) {
@@ -159,8 +196,8 @@ namespace Chan
 
       return chanUri.Authority == "" 
         ? GetLocalSender<T>(chanUri.AbsolutePath) 
-          : (await GetClient<T, IChanSenderFactory<Unit>, NetChanClientCacheSender>(
-        chanUri, clientBindingsSender, binding, clientSenders)).GetSender<T>();
+          : GetSenderAndRememberToFree<T>(await GetClient<T, IChanSenderFactory<Unit>, NetChanClientCacheSender>(
+        chanUri, clientBindingsSender, binding, clientSenders));
     }
 
     Task<T> GetClient<TMsg, T, TC>(Uri chanUri, IDictionary<Uri, Binding> dfltB,
@@ -174,11 +211,10 @@ namespace Chan
       throw new InvalidOperationException("Client type not initialized");
     }
 
-    //TODO: free snder/receiver
-    //
     bool Free(Type t, IChanBase chan) {
-      //TODO:
-      return false;
+      //type in the end unnecessary... REMOVE?
+      Func<bool> remover;
+      return freeChans.TryGetValue(chan, out remover) && remover();
     }
 
     public bool Free<T>(IChanSender<T> chan) {
@@ -187,6 +223,32 @@ namespace Chan
 
     public bool Free<T>(IChanReceiver<T> chan) {
       return Free(typeof(T), chan);
+    }
+
+    //closes all chans; cleares cache; returns accumulated Close etc...
+    public Task CloseAll(bool requireAllFreed = false) {
+      if (requireAllFreed && freeChans.Count != 0)
+        throw new InvalidOperationException("There are still unfreed chans. (count: " + freeChans.Count + ")");
+      
+      foreach (var fv in freeChans.Values.ToList()) //free everything
+        fv(); //TODO: what would something retuning false mean? - it's always the correct chan...
+
+      return Task.WhenAll(Combine(
+        from l in locals
+            select l.Value.Chan.Close(),
+        from l in locals
+            where l.Value.IsNetChan
+            select l.Value.Server.Close(),
+        from kv in clientReceivers
+            from f in kv.Value.All()
+            select f.Close(),
+        from kv in clientSenders
+            from f in kv.Value.All()
+            select f.Close()));
+    }
+
+    static IEnumerable<T> Combine<T>(params IEnumerable<T>[] seqs) {
+      return seqs.SelectMany(x => x);
     }
 
     static void ChanUriValidation(Uri chanUri) {
@@ -302,9 +364,9 @@ namespace Chan
     #endregion
 
     protected sealed class ChanBox {
-      public IChanFactory<Unit> Chan{ get; private set; }
+      public IChanFactory<Unit> Chan { get; private set; }
 
-      public NetChanServer Server{ get; private set; }
+      public NetChanServer Server { get; private set; }
 
       public ChanBox(IChanFactory<Unit> local, NetChanServer server) {
         Chan = local;

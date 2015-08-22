@@ -5,8 +5,8 @@ using System.Collections.Generic;
 
 namespace Chan
 {
-  public interface IChanFactoryBase {
-    Type GenericType{ get; }
+  public interface IChanFactoryBase :IChanBase {
+    Type GenericType { get; }
 
     ///if contained and freed
     bool Free(IChanBase chan);
@@ -31,7 +31,34 @@ namespace Chan
 
     public abstract IChanSender<T> GetSender(TCtor ctorData);
 
-    public abstract ChanDistributionType DistributionType{ get; }
+    public abstract ChanDistributionType DistributionType { get; }
+
+    #region IChanBase implementation
+
+    //wraps result of first call to CloseOnce
+    readonly TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
+
+    public bool Closed { get { return closingTaskPromise.Task.IsCompleted; } }
+
+    public virtual Task Close() {
+      if (!Closed)
+        lock (closingTaskPromise)
+          if (!Closed)
+            closingTaskPromise.SetResult(CloseOnce());
+      return AfterClosed();
+    }
+
+    ///only called once
+    protected virtual Task CloseOnce() {
+      //TODO: IMPLEMENT
+      return Task.Delay(0);
+    }
+
+    public Task AfterClosed() {
+      return closingTaskPromise.Task.Flatten();
+    }
+
+    #endregion
 
     #region IChanFactory implementation
 
@@ -119,7 +146,9 @@ namespace Chan
           }
         } catch (Exception) { //propagate exception
           drain.Consume(sT);
+          #if DEBUG
           throw;//TODO:decide : should something somewhere in background throw? - probably not-> DEBUG
+          #endif
         }
       };
       self = receivedEventHandler;
