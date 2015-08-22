@@ -50,7 +50,6 @@ namespace Chan
 
     ///only called once
     protected virtual Task CloseOnce() {
-      //TODO: IMPLEMENT
       return Task.Delay(0);
     }
 
@@ -173,7 +172,7 @@ namespace Chan
         } catch (Exception) { //propagate exception
           drain.Consume(sT);
           #if DEBUG
-          throw;//TODO:decide : should something somewhere in background throw? - probably not-> DEBUG
+          throw;//DECIDE: should something somewhere in background throw? - probably not-> DEBUG
           #endif
         }
       };

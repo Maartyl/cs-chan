@@ -74,8 +74,7 @@ namespace Chat
             //continue
           break;
         }
-        //free Gui thread
-        await Task.Yield();
+        //await Task.Yield();
 
         //possibly append port if necessary
         if (!addr.Contains(":")) {
@@ -89,7 +88,7 @@ namespace Chat
         Func<string,Uri> path = s => new UriBuilder(uri){ Path = s }.Uri;
 
         //run after connected (or failed)
-        Action<State> cleanConnecting = (s) => {
+        Action<State> cleanConnecting = s => {
           if (state == State.Connected && s == State.ConnectingFailed)
             //exception in afterConnected in OK connected
             return;
@@ -105,7 +104,7 @@ namespace Chat
                 return;
               a();
             } finally {
-              //TODO: I doubt this works...
+              //: I doubt this works... - It does, actually.
               //worst case scenario: something will be left in afterConnected...
               if (a != null)
                 continue;
@@ -219,14 +218,14 @@ namespace Chat
     }
 
     struct ConnectionChans {
-      public IChan<Message> Broadcast{ get; private set; }
+      public IChan<Message> Broadcast { get; private set; }
 
-      public IChanSender<Message> BsSender{ get; private set; }
+      public IChanSender<Message> BsSender { get; private set; }
 
-      public IChanReceiver<Message> BsReceiver{ get; private set; }
+      public IChanReceiver<Message> BsReceiver { get; private set; }
 
       //meta data: address used to connect
-      public string MetaAddr{ get; set; }
+      public string MetaAddr { get; set; }
 
       public ChanEvent<Message> MetaEvent { get; set; }
 
