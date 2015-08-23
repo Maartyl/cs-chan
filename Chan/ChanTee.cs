@@ -5,7 +5,7 @@ namespace Chan
 {
   public class ChanTee<T> : IChanReceiver<T> {
     IChanReceiver<T> chanIn;
-    Chan<T> chanOut = new ChanAsync<T>();
+    ChanBase<T> chanOut = new ChanAsync<T>();
     readonly Task over;
 
     event Action<T> Message = a => {};

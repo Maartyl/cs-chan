@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Chat
 {
+  //(school:) This probably shouldn't be part of kB of requirement
+  // - It's still iniresting even if useless, though...
+
   //I thougt I made something cool, but this is essentailly just TaskCompletionsSource ...
   // - and it doesn't even work that well...
 
@@ -113,7 +116,7 @@ namespace Chat
 
     static void writeln(string str) {
       var id = Thread.CurrentThread.ManagedThreadId;
-      Console.WriteLine("{0:3}@ {1}", id, str);
+      Console.WriteLine("{0:2}@ {1}", id, str);
     }
 
 

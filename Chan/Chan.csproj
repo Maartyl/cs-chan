@@ -48,13 +48,10 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NUnitTestClass.cs" />
-    <Compile Include="TaskCompletionSourceEmpty.cs" />
     <Compile Include="IChanBase.cs" />
     <Compile Include="RemoteException.cs" />
     <Compile Include="ISerDes.cs" />
     <Compile Include="BinarySerDesForSerializable.cs" />
-    <Compile Include="DebugCounter.cs" />
     <Compile Include="NetChan\NetChanBase.cs" />
     <Compile Include="NetChan\NetChanConfig.cs" />
     <Compile Include="NetChan\NetChanReceiverBase.cs" />
@@ -64,7 +61,6 @@
     <Compile Include="NetChan\NetChanSenderClient.cs" />
     <Compile Include="NetChan\NetChanSenderServer.cs" />
     <Compile Include="NetChan\NetChanTBase.cs" />
-    <Compile Include="LocalChan\Chan.cs" />
     <Compile Include="LocalChan\ChanAsync.cs" />
     <Compile Include="LocalChan\DeliverAsync.cs" />
     <Compile Include="LocalChan\DeliverBarrier.cs" />
@@ -72,28 +68,33 @@
     <Compile Include="ChanStore.cs" />
     <Compile Include="ChanTee.cs" />
     <Compile Include="Chan.cs" />
-    <Compile Include="ExceptionDrain.cs" />
     <Compile Include="NetChan\NetChanServer.cs" />
     <Compile Include="TaskCompletionCallback.cs" />
-    <Compile Include="TaskHelpers.cs" />
-    <Compile Include="DbgCns.cs" />
-    <Compile Include="TaskCollector.cs" />
-    <Compile Include="Exts.cs" />
-    <Compile Include="ConnectionCache.cs" />
     <Compile Include="InvokeOnceEmbeddable.cs" />
-    <Compile Include="Unit.cs" />
     <Compile Include="NetChan\INetChanProvider.cs" />
     <Compile Include="NetChan\NetChanClientCache.cs" />
     <Compile Include="NetChan\NetChanClientCacheReceiver.cs" />
     <Compile Include="NetChan\NetChanClientCacheSender.cs" />
     <Compile Include="NetChan\NetChanProviderClient.cs" />
     <Compile Include="ChanCombiner.cs" />
-    <Compile Include="UriHelpers.cs" />
     <Compile Include="ChanFactory.cs" />
+    <Compile Include="LocalChan\ChanBase.cs" />
+    <Compile Include="Tests\ChanSimpleTest.cs" />
+    <Compile Include="Helpers\DbgCns.cs" />
+    <Compile Include="Helpers\DebugCounter.cs" />
+    <Compile Include="Helpers\ExceptionDrain.cs" />
+    <Compile Include="Helpers\Exts.cs" />
+    <Compile Include="Helpers\TaskCollector.cs" />
+    <Compile Include="Helpers\TaskCompletionSourceEmpty.cs" />
+    <Compile Include="Helpers\TaskHelpers.cs" />
+    <Compile Include="Helpers\Unit.cs" />
+    <Compile Include="Helpers\UriHelpers.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="NetChan\" />
     <Folder Include="LocalChan\" />
+    <Folder Include="Tests\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
 </Project>

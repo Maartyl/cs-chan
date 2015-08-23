@@ -26,7 +26,7 @@ namespace Chan
       AllPassed(new ChanAsync<int>());
     }
 
-    public void AllPassed(Chan<int> chan) {
+    public void AllPassed(ChanBase<int> chan) {
       Func<Task> a = async () => {
         for (int i = 0; i < 1000; ++i)
           await chan.SendAsync(i);
@@ -82,7 +82,7 @@ namespace Chan
       OrderWithSingleInAndOut(new ChanAsync<int>());
     }
 
-    public void OrderWithSingleInAndOut(Chan<int> chan) {
+    public void OrderWithSingleInAndOut(ChanBase<int> chan) {
       //this is needed: tests work correctly otherwise... this initialzes thread pool or something...
       Parallel.Invoke(Task.Delay(4).Wait, Task.Delay(3).Wait, Task.Delay(5).Wait);
 

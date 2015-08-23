@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace Chan
 {
-  public class ChanAsync<T> : Chan<T> {
+  public class ChanAsync<T> : ChanBase<T> {
     readonly BlockingCollection<TaskCompletionCallback<T, Task>> promises;
     readonly BlockingCollection<DeliverAsync<T>> waiters;
 

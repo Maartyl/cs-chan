@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace Chan
 {
+  ///cashes connections (factories with NetChanClients) for ChanStore
+  /// - If not present: connects
   internal abstract class NetChanClientCache<T> {
     /*where T : class*/
     readonly Dictionary<Uri, T> cache = new Dictionary<Uri, T>();
@@ -67,6 +69,7 @@ namespace Chan
             : connecting[chan] = Task.Run(() => {
           //not connecting nor loaded: 'I' will load it (in background): 
           // //does not run inside lock
+          bool removedFromConnecting = false;
           try {
             var info = RequireInfoFromUri(chan, binding);
 
@@ -76,6 +79,7 @@ namespace Chan
               lock (cacheLock) {
                 cache[chan] = data;
                 connecting.Remove(chan);
+                removedFromConnecting = true;
               }
               return data;
             }
@@ -95,27 +99,12 @@ namespace Chan
             //remove from connecting without stroring in cache
             // -> can be tried again
             // //check is really not needed: only to prevent locking
-            if (connecting.ContainsKey(chan))
+            if (!removedFromConnecting)
               lock (cacheLock)
                 connecting.Remove(chan);  
           }
         });
     }
-
-    //    T RequireWait(Uri chanName, Binding binding) {
-    //      //Yes, async would be better, but I don't want ChanStore.Get{Sender,Receiver} to return Task...
-    //      //wait until loaded: if loaded here: possible deadlock (thus: Task.Run) - always 'background' thread
-    //      return RequireAsync(chanName, binding).Result;
-    //    }
-    //
-    //    public T Get(Uri chan, Binding binding) {
-    //      T data;
-    //      bool isInCache;
-    //      lock (cacheLock)
-    //        isInCache = cache.TryGetValue(chan, out data);
-    //
-    //      return isInCache ? data : RequireWait(chan, binding);
-    //    }
 
     public Task<T> GetAsync(Uri chan, Binding binding) {
       chan = chan.Normalize(); // chan name
@@ -129,7 +118,7 @@ namespace Chan
 
     public bool Forget(Uri chan) {
       lock (cacheLock)
-        return connecting.Remove(chan) || cache.Remove(chan);
+        return /*connecting.Remove(chan) ||*/ cache.Remove(chan);
     }
 
 

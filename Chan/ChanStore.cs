@@ -12,14 +12,18 @@ namespace Chan
 {
   ///allows access to registered channels
   /// - this class is not thread safe
-  [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+  [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)/*this allows to specify this as handler*/]
   public class ChanStore : INetChanProvider {
     readonly Dictionary<string, ChanBox> locals = new Dictionary<string, ChanBox>();
     readonly Dictionary<Type, NetChanClientCacheReceiver> clientReceivers = new Dictionary<Type, NetChanClientCacheReceiver>();
     readonly Dictionary<Type, NetChanClientCacheSender> clientSenders = new Dictionary<Type, NetChanClientCacheSender>();
+    //default bindings per uri
     readonly Dictionary<Uri, Binding> clientBindingsSender = new Dictionary<Uri, Binding>();
     readonly Dictionary<Uri, Binding> clientBindingsReceiver = new Dictionary<Uri, Binding>();
+    //invoced from .Free
     readonly Dictionary<IChanBase, Func<bool>> freeChans = new Dictionary<IChanBase, Func<bool>>();
+    //WCF service used to open NetChans
+    // - Closing it does not NetChans opened through it (are their own TCP connections)
     readonly ServiceHost netChanProviderHost;
     int connectingServerTimeout = 30 * 1000;
 
@@ -147,13 +151,15 @@ namespace Chan
 
     #endregion
 
+    #region free and get from factory
+
     //saves in freeChans map: called from Free
     //thanks to this, I don't have to look for it later...
     void RememberToFree(IChanFactoryBase f, IChanBase chan) {
       lock (freeChans)
         freeChans[chan] = () => {
           var ret = f.Free(chan);
-          //if (ret) - FactoryWrap returns false always (which is not very good....)
+          //if (ret) - FactoryWrap returns false always (which is not very good, but.... - change return type...?)
           lock (freeChans)
             freeChans.Remove(chan); //remove from non-freed (if got freed)
           return ret; //free the chan;
@@ -172,16 +178,30 @@ namespace Chan
       return chan;
     }
 
+    #endregion
+
+    #region get chan
+
     ///variant ot be used when accessing local chans
     public IChanReceiver<T> GetReceiver<T>(Uri chanUri) {
       return GetReceiverAsync<T>(chanUri).Result;
     }
 
-    ///variant ot be used when accessing local chans
+    ///variant to be used when accessing local chans
     public IChanSender<T> GetSender<T>(Uri chanUri) {
       return GetSenderAsync<T>(chanUri).Result;
     }
 
+    /// <summary>
+    /// Gets chan receiver from store.
+    /// </summary>
+    /// <returns>receiver end of chan</returns>
+    /// <param name="chanUri">uri representing chan: authority will be used for ChanStoreServer lookup 
+    /// and path for determining chan.
+    /// No authority means local lookup from side of server.
+    /// Localhost authority means local lookup from side of client.</param>
+    /// <param name="binding">if needs special binding; ignored if cached</param>
+    /// <typeparam name="T">type of messagse in chan</typeparam>
     public async Task<IChanReceiver<T>> GetReceiverAsync<T>(Uri chanUri, Binding binding = null) {
       ChanUriValidation(chanUri);
 
@@ -191,6 +211,16 @@ namespace Chan
         chanUri, clientBindingsReceiver, binding, clientReceivers));
     }
 
+    /// <summary>
+    /// Gets chan sender from store.
+    /// </summary>
+    /// <returns>sender end of chan</returns>
+    /// <param name="chanUri">uri representing chan: authority will be used for ChanStoreServer lookup 
+    /// and path for determining chan.
+    /// No authority means local lookup from side of server.
+    /// Localhost authority means local lookup from side of client.</param>
+    /// <param name="binding">if needs special binding; ignored if cached</param>
+    /// <typeparam name="T">type of messagse in chan</typeparam>
     public async Task<IChanSender<T>> GetSenderAsync<T>(Uri chanUri, Binding binding = null) {
       ChanUriValidation(chanUri);
 
@@ -200,6 +230,8 @@ namespace Chan
         chanUri, clientBindingsSender, binding, clientSenders));
     }
 
+    ///core for getting remote chans (from cache / connect / ...)
+    /// - tries assigning bindings in order: provided, default for Uri, default
     Task<T> GetClient<TMsg, T, TC>(Uri chanUri, IDictionary<Uri, Binding> dfltB,
                                    Binding binding, IDictionary<Type, TC> cache) 
       where TC : NetChanClientCache<T> {
@@ -210,6 +242,10 @@ namespace Chan
         return factoryCache.GetAsync(chanUri, binding ?? bindDflt ?? DefaultBinding);
       throw new InvalidOperationException("Client type not initialized");
     }
+
+    #endregion
+
+    #region free and close
 
     bool Free(Type t, IChanBase chan) {
       //type in the end unnecessary... REMOVE?
@@ -253,6 +289,8 @@ namespace Chan
     static IEnumerable<T> Combine<T>(params IEnumerable<T>[] seqs) {
       return seqs.SelectMany(x => x);
     }
+
+    #endregion
 
     static void ChanUriValidation(Uri chanUri) {
       if (chanUri == null)
@@ -355,17 +393,20 @@ namespace Chan
         };
       }
     }
-    //WCF handler
+
+    ///WCF handler
     NetChanConnectionInfo INetChanProvider.RequestSender(Uri chanName) {
       return Request(chanName, x => x.StartSenderCounterpart);
     }
-    //WCF handler
+
+    ///WCF handler
     NetChanConnectionInfo INetChanProvider.RequestReceiver(Uri chanName) {
       return Request(chanName, x => x.StartReceiverCounterpart);
     }
 
     #endregion
 
+    //to store both local chan factory and (possibly) chan server of the same chan
     protected sealed class ChanBox {
       public IChanFactory<Unit> Chan { get; private set; }
 
@@ -383,8 +424,11 @@ namespace Chan
     }
   }
 
+  ///Determines how will be messages in channels with multiple receivers distributed.
   public enum ChanDistributionType {
+    //a la event
     Broadcast,
+    //a la workload distribution
     FirstOnly
   }
 }

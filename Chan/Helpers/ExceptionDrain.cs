@@ -5,7 +5,7 @@ namespace Chan
 {
   ///only handles first exception
   public class ExceptionDrain {
-    TaskCompletionSourceEmpty p = new TaskCompletionSourceEmpty();
+    readonly TaskCompletionSourceEmpty p = new TaskCompletionSourceEmpty();
 
     public Task Task{ get { return p.Task; } }
 
@@ -18,7 +18,7 @@ namespace Chan
     }
 
     public void EndOk() {
-      p.TrySetResult(null);
+      p.TrySetCompleted();
     }
   }
 }

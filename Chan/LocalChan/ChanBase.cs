@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 namespace Chan
 {
   //this partially handles closing of channel, not synchronization
-  public abstract class Chan<TMsg> : IChan<TMsg> {
+  //base for local chans
+  public abstract class ChanBase<TMsg> : IChan<TMsg> {
     //wraps result of first call to CloseOnce
     readonly TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
 
@@ -59,7 +60,7 @@ namespace Chan
 
     protected readonly static Task<TMsg> CancelledTask;
 
-    static Chan() {
+    static ChanBase() {
       var tcs = new TaskCompletionSource<TMsg>();
       tcs.SetCanceled();
       CancelledTask = tcs.Task;
