@@ -48,7 +48,7 @@ namespace Chan
 
     ///Beware: will potentially throw away 'currently awaited' message
     public void Stop() {
-      stopListening.SetCompleted();
+      stopListening.TrySetCompleted();
     }
 
     #region IChanBase implementation

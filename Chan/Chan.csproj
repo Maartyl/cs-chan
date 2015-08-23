@@ -71,7 +71,6 @@
     <Compile Include="ChanEvent.cs" />
     <Compile Include="ChanStore.cs" />
     <Compile Include="ChanTee.cs" />
-    <Compile Include="IChanFactory.cs" />
     <Compile Include="Chan.cs" />
     <Compile Include="ExceptionDrain.cs" />
     <Compile Include="NetChan\NetChanServer.cs" />
@@ -90,6 +89,7 @@
     <Compile Include="NetChan\NetChanProviderClient.cs" />
     <Compile Include="ChanCombiner.cs" />
     <Compile Include="UriHelpers.cs" />
+    <Compile Include="ChanFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

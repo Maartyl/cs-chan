@@ -75,14 +75,28 @@ namespace Chan
 
     #endregion
   }
-  //only wraps: does not provide broadcast
-  public class ChanFactoryWrap<T> : ChanFactory<T, Unit> {
-    readonly IChanReceiver<T> chanR;
-    readonly IChanSender<T> chanS;
 
-    public ChanFactoryWrap(IChanReceiver<T> chanR, IChanSender<T> chanS) {
+  public abstract class ChanFactoryFromPair<T,TCtor> : ChanFactory<T,TCtor> {
+    protected readonly IChanReceiver<T> chanR;
+    protected readonly IChanSender<T> chanS;
+
+    protected ChanFactoryFromPair(IChanReceiver<T> chanR, IChanSender<T> chanS) {
       this.chanR = chanR;
       this.chanS = chanS;
+      CloseWhenEitherCloses();
+    }
+
+    void CloseWhenEitherCloses() {
+      var l = new List<Task>();
+      if (chanR != null) l.Add(chanR.AfterClosed());
+      if (chanS != null) l.Add(chanS.AfterClosed());
+      Task.WhenAny(l.ToArray()).ContinueWith(t => Close());
+    }
+  }
+
+  //only wraps: does not provide broadcast
+  public class ChanFactoryWrap<T> : ChanFactoryFromPair<T, Unit> {
+    public ChanFactoryWrap(IChanReceiver<T> chanR, IChanSender<T> chanS) : base(chanR, chanS) {
     }
 
     public ChanFactoryWrap(IChan<T> chan) : this(chan, chan) {
@@ -130,16 +144,15 @@ namespace Chan
   }
   //this works like events: if noone subscribed, message gets lost
   //receivers do not propagate close
-  public class ChanFactoryReceiveAll<T> : ChanFactory<T, Unit> {
+  public class ChanFactoryReceiveAll<T> : ChanFactoryFromPair<T, Unit> {
     readonly ChanEvent<T> evt;
-    readonly IChanSender<T> chanS;
+    //readonly IChanSender<T> chanS;
     readonly Dictionary<IChanBase,Action<T>> receivers = new Dictionary<IChanBase, Action<T>>();
     volatile bool closedAndEmpty;
     readonly ExceptionDrain drain = new ExceptionDrain();
 
-    public ChanFactoryReceiveAll(IChanReceiver<T> chanR, IChanSender<T> chanS) {
+    public ChanFactoryReceiveAll(IChanReceiver<T> chanR, IChanSender<T> chanS) : base(chanR, chanS) {
       this.evt = new ChanEvent<T>(chanR);
-      this.chanS = chanS;
       drain.Consume(chanR.AfterClosed().ContinueWith(t => {
         closedAndEmpty = true; //close all receivers and consume exceptions
         drain.Consume(Task.WhenAll(receivers.Select(kv => kv.Key.Close())));

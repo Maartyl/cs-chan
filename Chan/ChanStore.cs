@@ -153,9 +153,9 @@ namespace Chan
       lock (freeChans)
         freeChans[chan] = () => {
           var ret = f.Free(chan);
-          if (ret)
-            lock (freeChans)
-              freeChans.Remove(chan); //remove from non-freed (if got freed)
+          //if (ret) - FactoryWrap returns false always (which is not very good....)
+          lock (freeChans)
+            freeChans.Remove(chan); //remove from non-freed (if got freed)
           return ret; //free the chan;
         };
     }

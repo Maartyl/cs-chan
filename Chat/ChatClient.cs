@@ -129,11 +129,7 @@ namespace Chat
         //inform: client connected
         BroadcastMessage(new Message(Message.MessageType.Connected, "".ArgSrc(ClientName))); 
 
-        chans.BsReceiver.AfterClosed().ContinueWith(t => {
-          connector.RunNotifySystem("channel closed".ArgSrc(addr));
-        });
-
-      } catch (EndpointNotFoundException) {
+      } catch (EndpointNotFoundException ex) {
         connector.RunError("no server found".ArgSrc("connect " + addr));
       } catch (Exception ex) {
         ex.PipeEx(connector, "connect " + addr);
@@ -141,6 +137,18 @@ namespace Chat
         if (state != State.Connected)
           state = State.Disconnected;
       }
+      try {
+        if (state != State.Disconnected && chans.BsReceiver != null)
+          await chans.BsReceiver.AfterClosed().ContinueWith(t => {
+            connector.RunNotifySystem("channel closed".ArgSrc("disconnecting " + addr));
+            DisconnectCore();
+          });//.PipeEx(connector, "connect[after chan closed] " + addr);
+      } catch (TaskCanceledException) {
+        //channel closed: already processed in continuation
+      } catch (Exception ex) {
+        ex.PipeEx(connector, "connect[after chan closed awaiting] " + addr);
+      }
+
     }
 
     //used from ChanEvent
@@ -166,12 +174,17 @@ namespace Chat
     }
 
     public void Disconnect() {
-      var msg = new Message(Message.MessageType.Disconnected, "".ArgSrc(ClientName));
-      BroadcastMessage(msg, t => {
-        state = State.Disconnected;
-        chans.MetaEvent.Stop();
-        chans = chans.Free(store, connector);
-      });
+      if (state != State.Connected)
+        connector.RunError("not connected".ArgSrc("disconnect"));
+      else BroadcastMessage(
+          new Message(Message.MessageType.Disconnected,
+            "".ArgSrc(ClientName)), t => DisconnectCore());
+    }
+
+    void DisconnectCore() {
+      state = State.Disconnected;
+      chans.MetaEvent.Stop();
+      chans = chans.Free(store, connector);
     }
 
     public void BroadcastMessage(Message msg, Action<Task> afterSent = null) {

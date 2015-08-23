@@ -41,6 +41,10 @@ namespace Chan
       }.Uri;
       var address = new EndpointAddress(serverAddress);
       var client = new NetChanProviderClient(binding, address);
+
+      //set 10s timeout instead of 1 min...
+      client.InnerChannel.OperationTimeout = new TimeSpan(0, 0, 10);
+
       var info = Request(client, chanLocalUri);
       client.Close();
       return info;
@@ -63,33 +67,38 @@ namespace Chan
             : connecting[chan] = Task.Run(() => {
           //not connecting nor loaded: 'I' will load it (in background): 
           // //does not run inside lock
-          var info = RequireInfoFromUri(chan, binding);
+          try {
+            var info = RequireInfoFromUri(chan, binding);
 
-          if (info.IsOk) {
-            var tcp = new TcpClient(chan.Host, info.Port);
-            var data = RequireConnect(tcp, info, chan);
-            lock (cacheLock) {
-              cache[chan] = data;
-              connecting.Remove(chan);
+            if (info.IsOk) {
+              var tcp = new TcpClient(chan.Host, info.Port);
+              var data = RequireConnect(tcp, info, chan);
+              lock (cacheLock) {
+                cache[chan] = data;
+                connecting.Remove(chan);
+              }
+              return data;
             }
-            return data;
-          }
-          //exception / error / not OK
-          //remove from connecting without stroring in cache (before throw)
-          // -> can be tried again
-          lock (cacheLock)
-            connecting.Remove(chan);
-          
-          if (info.ErrorType != null && info.ErrorMessage != null) {
-            //if exception as: type + message
-            Type type = Type.GetType(info.ErrorType);
-            if (type != null && type.IsSubclassOf(typeof(Exception))) {
-              ConstructorInfo ctor = type.GetConstructor(new[] { typeof(string) });
-              if (ctor != null)
-                throw (Exception) ctor.Invoke(new[] { info.ErrorMessage });
+            //exception / error / not OK
+
+            if (info.ErrorType != null && info.ErrorMessage != null) {
+              //if exception as: type + message
+              Type type = Type.GetType(info.ErrorType);
+              if (type != null && type.IsSubclassOf(typeof(Exception))) {
+                ConstructorInfo ctor = type.GetConstructor(new[] { typeof(string) });
+                if (ctor != null)
+                  throw (Exception) ctor.Invoke(new[] { info.ErrorMessage });
+              }
             }
+            throw new NetChanProviderException(info, chan);
+          } finally {
+            //remove from connecting without stroring in cache
+            // -> can be tried again
+            // //check is really not needed: only to prevent locking
+            if (connecting.ContainsKey(chan))
+              lock (cacheLock)
+                connecting.Remove(chan);  
           }
-          throw new NetChanProviderException(info, chan);
         });
     }
 
@@ -120,7 +129,7 @@ namespace Chan
 
     public bool Forget(Uri chan) {
       lock (cacheLock)
-        return cache.Remove(chan);
+        return connecting.Remove(chan) || cache.Remove(chan);
     }
 
 

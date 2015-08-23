@@ -27,7 +27,9 @@ namespace Chan
 
       var noReceiver = new ChanAsync<T>();
       //cannot use null, because broadcast factory uses ChanEvent which requires chan to wait on
-      return Chan.FactoryFor(info.Type, noReceiver, client);
+      var factory = Chan.FactoryFor(info.Type, noReceiver, client);
+      factory.AfterClosed().ContinueWith(t => Forget(chan));
+      return factory;
     }
   }
 }

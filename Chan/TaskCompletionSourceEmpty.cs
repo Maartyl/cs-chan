@@ -9,6 +9,11 @@ namespace Chan
         if (!base.Task.IsCompleted) //something else
           throw Task.Exception;
     }
+
+    ///whether completed fine
+    public bool TrySetCompleted() {
+      return TrySetResult(null) || Task.IsCompleted;
+    }
   }
 }
 
