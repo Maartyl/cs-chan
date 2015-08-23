@@ -5,7 +5,7 @@ using System.ServiceModel;
 namespace Chan
 {
   [ServiceContract] 
-  public interface INetChanProvider {    
+  public interface INetChanProvider {
     [OperationContract] 
     NetChanConnectionInfo RequestSender(Uri chanName);
 
@@ -15,19 +15,19 @@ namespace Chan
 
   [Serializable]
   public class NetChanConnectionInfo {
-    public int Port{ get; internal set; }
+    public int Port { get; internal set; }
 
     public uint Key { get; internal set; }
 
     public ChanDistributionType Type { get; internal set; }
     //---
-    public string ErrorMessage{ get; internal set; }
+    public string ErrorMessage { get; internal set; }
 
     ///if error == exception: the name of the type of the exception
-    public string ErrorType{ get; internal set; }
+    public string ErrorType { get; internal set; }
 
     ///if error == exception: .HResult
-    public int ErrorCode{ get; internal set; }
+    public int ErrorCode { get; internal set; }
 
     public bool IsOk{ get { return ErrorCode == 0 && ErrorMessage == null && ErrorType == null; } }
   }
@@ -35,7 +35,10 @@ namespace Chan
   public class NetChanProviderException : Exception {
     public NetChanConnectionInfo Info { get; private set; }
 
-    public NetChanProviderException(NetChanConnectionInfo info):base (info.ErrorMessage) {
+    public Uri RequestUri { get; private set; }
+
+    public NetChanProviderException(NetChanConnectionInfo info, Uri requestUri) : base(info.ErrorMessage) {
+      RequestUri = requestUri;
       if (info.ErrorCode != 0)
         this.HResult = info.ErrorCode;
       Info = info;

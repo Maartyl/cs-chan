@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using System;
-
 using Chan;
 
 namespace Chat
@@ -24,7 +23,9 @@ namespace Chat
           conn.RunOrDefault(Cmd.CmdParseRun, arg);
       });
 
-      Console.Error.WriteLine("main-thread exit"); //server hangs waiting
+      #if DEBUG
+      Console.Error.WriteLine("main-thread exit");
+      #endif
     }
 
     //this is for simple Chan testing

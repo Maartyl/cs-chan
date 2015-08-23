@@ -121,15 +121,15 @@ namespace Chan
     }
 
     public override Task Start(uint key) {
-      throw new NotImplementedException();
+      return null;
     }
 
     protected override Task<Header> OnMsgReceived(Header h) {
-      throw new NotImplementedException();
+      return null;
     }
 
     protected override Task OnCloseReceived(Header h) {
-      throw new NotImplementedException();
+      return null;
     }
 
     #endregion

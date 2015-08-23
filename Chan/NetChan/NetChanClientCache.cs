@@ -29,19 +29,19 @@ namespace Chan
     protected abstract NetChanConnectionInfo Request(INetChanProvider p, Uri chanLocalUri);
 
     NetChanConnectionInfo RequireInfoFromUri(Uri chan, Binding binding) {
-      var chanLocalUri = new UriBuilder(chan);
-      chanLocalUri.Host = null;
-      chanLocalUri.Port = 0;
-
-      var serverAddress = new UriBuilder(chan);
-      serverAddress.Path = "";
-      serverAddress.Scheme = "http"; //TODO: add some more generic variant
-      serverAddress.Query = "";
-      serverAddress.Fragment = "";
-
-      var address = new EndpointAddress(serverAddress.Uri);
+      var chanLocalUri = new UriBuilder(chan) {
+        Host = null,
+        Port = 0
+      }.Uri;
+      var serverAddress = new UriBuilder(chan) {
+        Path = "",
+        Scheme = "http", //MAYBE: add some more generic variant
+        Query = "",
+        Fragment = "",
+      }.Uri;
+      var address = new EndpointAddress(serverAddress);
       var client = new NetChanProviderClient(binding, address);
-      var info = Request(client, chanLocalUri.Uri);
+      var info = Request(client, chanLocalUri);
       client.Close();
       return info;
     }
@@ -89,7 +89,7 @@ namespace Chan
                 throw (Exception) ctor.Invoke(new[] { info.ErrorMessage });
             }
           }
-          throw new NetChanProviderException(info);//TODO: include chan::Uri ?
+          throw new NetChanProviderException(info, chan);
         });
     }
 
@@ -109,7 +109,7 @@ namespace Chan
     //    }
 
     public Task<T> GetAsync(Uri chan, Binding binding) {
-      chan = Normalize(chan); // chan name
+      chan = chan.Normalize(); // chan name
       T data;
       bool isInCache;
       lock (cacheLock)
@@ -141,13 +141,6 @@ namespace Chan
     public IEnumerable<T> All() {
       lock (cacheLock)
         return cache.Values.ToList();
-    }
-
-    //TODO: move this outside to not enforce dependency on this class
-    public static Uri Normalize(Uri uri) {
-      if (uri.IsLoopback)//==localhost: choose 1 for equality
-        uri = new UriBuilder(uri) { Host = "127.0.0.1" }.Uri;
-      return uri;
     }
   }
 }

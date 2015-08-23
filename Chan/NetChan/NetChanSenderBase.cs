@@ -84,7 +84,7 @@ namespace Chan
         while (true) {
           var derT = world.ReceiveAsync(); 
           if (!derT.IsCompleted) //next message is not immediately available
-            await Flush(); //TODO: assume Flush can fail: either just cancel cur or: list of all not flushed... 
+            await Flush(); //ONCE: assume Flush can fail: either just cancel cur or: list of all not flushed... 
           var der = await derT;
           DbgCns.Trace(this, "pipe1");
           try { 

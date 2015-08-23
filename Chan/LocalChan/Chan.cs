@@ -10,10 +10,10 @@ namespace Chan
 
     public bool Closed { get { return closingTaskPromise.Task.IsCompleted; } }
 
-    public virtual Task Close() {
+    public Task Close() {
       if (!Closed)
         lock (closingTaskPromise)
-          if (!Closed) 
+          if (!Closed)
             closingTaskPromise.SetResult(CloseOnce());
       return AfterClosed();
     }

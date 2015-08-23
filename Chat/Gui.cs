@@ -51,11 +51,14 @@ namespace Chat
 
       self.GotFocus += (src, ea) => cmdBar.Focus();
       area.GotFocus += (src, ea) => cmdBar.Focus();
-      msgBoard.KeyPress += (src, ea) => {
+
+      KeyPressEventHandler kpeh = (src, ea) => {
         cmdBar.Focus();
-        //TODO: doesn't work for shortcuts
-        cmdBar.Paste(ea.KeyChar.ToString()); //insert at cursor
+        //MAYBE solve some day: doesn't work for shortcuts
+        cmdBar.Paste(ea.KeyChar.ToString());//insert at cursor
       };
+      views.Help.KeyPress += kpeh;
+      msgBoard.KeyPress += kpeh;
     }
 
     public void SwitchTo(Control c) {

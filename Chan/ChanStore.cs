@@ -115,11 +115,11 @@ namespace Chan
     }
 
     public void RegisterClientSenderBinding(Uri chan, Binding binding) {
-      clientBindingsSender[NetChanClientCache<Unit>.Normalize(chan)] = binding;
+      clientBindingsSender[chan.Normalize()] = binding;
     }
 
     public void RegisterClientReceiverBinding(Uri chan, Binding binding) {
-      clientBindingsReceiver[NetChanClientCache<Unit>.Normalize(chan)] = binding;
+      clientBindingsReceiver[chan.Normalize()] = binding;
     }
 
     #endregion
@@ -230,8 +230,11 @@ namespace Chan
       if (requireAllFreed && freeChans.Count != 0)
         throw new InvalidOperationException("There are still unfreed chans. (count: " + freeChans.Count + ")");
       
-      foreach (var fv in freeChans.Values.ToList()) //free everything
-        fv(); //TODO: what would something retuning false mean? - it's always the correct chan...
+      List<Func<bool>> freeClosers;
+      lock (freeChans)
+        freeClosers = freeChans.Values.ToList();
+      foreach (var fv in freeClosers) //free everything
+        fv(); //THOUGHT: what would something retuning false mean? - it's always the correct chan...
 
       return Task.WhenAll(Combine(
         from l in locals

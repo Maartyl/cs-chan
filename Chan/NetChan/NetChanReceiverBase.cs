@@ -34,7 +34,7 @@ namespace Chan
       Exception failed = null;
       try { //receive data: pipe exception to receiver and then throw (will stop ReceiveLoop)
         await ReceiveBytes(bfr, 0, msgSize, "message data");
-        hNext = ReceiveHeader(); //TODO: (only speed) make receive data of packet asynchronously as well
+        hNext = ReceiveHeader(); //ONCE: (only speed) make receive data of packet asynchronously as well
 
         DbgCns.Trace(this, "on-msg-awaitedK");
 

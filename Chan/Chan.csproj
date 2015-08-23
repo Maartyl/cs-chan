@@ -89,6 +89,7 @@
     <Compile Include="NetChan\NetChanClientCacheSender.cs" />
     <Compile Include="NetChan\NetChanProviderClient.cs" />
     <Compile Include="ChanCombiner.cs" />
+    <Compile Include="UriHelpers.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

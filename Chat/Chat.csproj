@@ -49,6 +49,7 @@
     <Compile Include="ChatClient.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="GuiChat.cs" />
+    <Compile Include="ActionTAwaiter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -19,6 +19,8 @@ namespace Chat
     public static readonly string Server = "server";
     public static readonly string ServerStart = "server.start";
     public static readonly string ServerStop = "server.stop";
+    public static readonly string Wsdl = "wsdl";
+    public static readonly string WsdlStop = "wsdl.stop";
     public static readonly string Connect = "connect";
     public static readonly string Disconnect = "disconnect";
     public static readonly string NoCommand = " #nocommand";
