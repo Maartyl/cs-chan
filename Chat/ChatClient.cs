@@ -100,7 +100,7 @@ namespace Chat
               a = afterConnected; //get and null afterConnected
               afterConnected = null;
               if (a == null)
-              //nothing to do; or added while executing last time
+              //nothing to do or added while executing last time
                 return;
               a();
             } finally {

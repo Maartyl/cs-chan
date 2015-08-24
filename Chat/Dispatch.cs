@@ -97,7 +97,7 @@ namespace Chat
 
     protected sealed override Action<TArg> Select(TCmd cmd) {
       Action<TArg> a;
-      return (commands.TryGetValue(cmd, out a)) ? a : null;
+      lock (commands) return (commands.TryGetValue(cmd, out a)) ? a : null;
     }
 
     protected sealed override void RegisterImpl(TCmd cmd, Action<TArg> handler, RegisterOpts opts) {

@@ -20,7 +20,7 @@ namespace Chan
     //default bindings per uri
     readonly Dictionary<Uri, Binding> clientBindingsSender = new Dictionary<Uri, Binding>();
     readonly Dictionary<Uri, Binding> clientBindingsReceiver = new Dictionary<Uri, Binding>();
-    //invoced from .Free
+    //invoked from .Free
     readonly Dictionary<IChanBase, Func<bool>> freeChans = new Dictionary<IChanBase, Func<bool>>();
     //WCF service used to open NetChans
     // - Closing it does not NetChans opened through it (are their own TCP connections)
@@ -61,20 +61,26 @@ namespace Chan
 
     #region server start, stop
 
+    ///Opens underlying WCF service for accessing net-chans remotely.
     public void StartServer(Uri address, Binding binding) {
       netChanProviderHost.AddServiceEndpoint(
         typeof(INetChanProvider), binding, address);
       netChanProviderHost.Open();
     }
 
+    ///Opens underlying WCF service for accessing net-chans remotely.
+    /// Uses: http://0.0.0.0
     public void StartServer(int port, Binding binding) {
       StartServer(new Uri("http://0.0.0.0:" + port), binding);
     }
 
+    ///Opens underlying WCF service for accessing net-chans remotely.
+    /// Uses DefaultBinding (SimpleHttp by default)
     public void StartServer(int port) {
       StartServer(port, defaultBinding);
     }
 
+    ///Closes underlying WCF service for accessing net-chans remotely.
     public void StopServer() {
       netChanProviderHost.Close();
     }

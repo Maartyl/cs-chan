@@ -37,7 +37,7 @@ namespace Chan
       }.Uri;
       var serverAddress = new UriBuilder(chan) {
         Path = "",
-        Scheme = "http", //MAYBE: add some more generic variant
+        Scheme = binding.Scheme,
         Query = "",
         Fragment = "",
       }.Uri;
@@ -46,7 +46,7 @@ namespace Chan
 
       //set 10s timeout instead of 1 min...
       client.InnerChannel.OperationTimeout = new TimeSpan(0, 0, 10);
-
+      client.Open();
       var info = Request(client, chanLocalUri);
       client.Close();
       return info;
