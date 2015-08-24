@@ -1,6 +1,8 @@
 todo
 
 
+
+
 - Prerequisities
 - Getting Started
 - API overview
@@ -12,3 +14,19 @@ todo
         - Include 'user' documentation on how to use that
     - Quite nice actually
     - Also shows Dispatch idea
+
+
+# School part
+
+- Used Technologies
+    - Sockets
+        - My TCP protocol
+    - WCF
+    - Linq
+        - including Query syntax
+    - Tasks
+    - async methods
+        - The main part, Chan System, is based around async and Tasks.
+    - Reflection
+        - in generating default SerDes
+    - Serialization

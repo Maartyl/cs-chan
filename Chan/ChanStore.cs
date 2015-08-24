@@ -36,7 +36,7 @@ namespace Chan
       LimitClientIP = true;
       netChanProviderHost = new ServiceHost(this/*what implements interface*/, wsdlPort > 0 ? new[] {
         new Uri("http://" + Environment.MachineName + ":" + wsdlPort + "/ChanStore")
-      } : new Uri[]{ });
+      } : new Uri[0]);
       if (wsdlPort > 0)
         netChanProviderHost.Description.Behaviors.Add(new ServiceMetadataBehavior{ HttpGetEnabled = true });
     }

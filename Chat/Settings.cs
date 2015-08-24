@@ -6,12 +6,13 @@ namespace Chat
 
     public Settings() {
       DefaultServerPort = 4567;
+      DefaultWsdlPort = 8000;
     }
 
     /// -1 == not allowed
     public int DefaultServerPort { get ; set; }
 
-
+    public int DefaultWsdlPort { get ; set; }
 
     public string ClientDefaultName{ get { return "anon"; } }
 

@@ -39,10 +39,9 @@ namespace Chan
         Path = "",
         Scheme = binding.Scheme,
         Query = "",
-        Fragment = "",
+        Fragment = "", 
       }.Uri;
-      var address = new EndpointAddress(serverAddress);
-      var client = new NetChanProviderClient(binding, address);
+      var client = new NetChanProviderClient(binding, new EndpointAddress(serverAddress));
 
       //set 10s timeout instead of 1 min...
       client.InnerChannel.OperationTimeout = new TimeSpan(0, 0, 10);

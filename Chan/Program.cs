@@ -1,12 +1,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
 namespace Chan
 {
+  ///low level manual testing
   public class MainClass {
     public static void Main(string[] args) {
       DbgCns.Trace("start", "main");
@@ -117,14 +117,14 @@ namespace Chan
         Out = clientTcp.GetStream(),
         InitialReceiveBufferSize = 128, 
         InitialSendBufferSize = 128,
-        PingDelayMs = 60*1000
+        PingDelayMs = 60 * 1000
       };
       var cfgOut = new NetChanConfig<T>() {
         In = serverTcp.GetStream(),
         Out = serverTcp.GetStream(),
         InitialReceiveBufferSize = 128,
         InitialSendBufferSize = 128,
-        PingDelayMs = 60*1000
+        PingDelayMs = 60 * 1000
       };
       var s = new NetChanSenderServer<T>(cfgOut);
       var r = new NetChanReceiverClient<T>(cfgIn);
