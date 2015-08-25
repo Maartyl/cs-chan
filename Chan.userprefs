@@ -1,1 +1,31 @@
-﻿<Properties StartupItem="Chat/Chat.csproj" />
+﻿<Properties StartupItem="Chat/Chat.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chat/Program.cs">
+    <Files>
+      <File FileName="Chat/GuiChat.cs" Line="46" Column="7" />
+      <File FileName="Chan/Tests/ChanSimpleTest.cs" Line="1" Column="1" />
+      <File FileName="Chat/Program.cs" Line="86" Column="26" />
+      <File FileName="Chan/ChanStore.cs" Line="156" Column="57" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.Chat>
+    <MonoDevelop.Ide.CustomExecutionModes>
+      <Data Name="Simple" Id="8874b2fa-94e9-4d2c-8d50-2607f1f3045b" ModeId="Default">
+        <CommandData>
+          <Item Key="MonoDevelop.Ide.Execution.CustomArgsCustomizer">
+            <Value Arguments="--simple 4561" ctype="CustomArgsExecutionModeData">
+              <EnvironmentVariables />
+            </Value>
+          </Item>
+          <Item Key="MonoDevelop.Ide.Execution.MonoExecutionCustomizer">
+            <Value ctype="MonoExecutionParameters" />
+          </Item>
+        </CommandData>
+      </Data>
+    </MonoDevelop.Ide.CustomExecutionModes>
+  </MonoDevelop.Ide.ItemProperties.Chat>
+</Properties>

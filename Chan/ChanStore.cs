@@ -140,6 +140,7 @@ namespace Chan
     /// <summary>
     /// All sender-chan clients will use provided config when created in GetAsync.
     /// Calling this before GetAsync for every type is necessary.
+    /// If this were implicit, exceptions could be lost.
     /// </summary>
     /// <returns>Task which collects exceptions in client.</returns>
     /// <param name="cfg">configuration for client</param>
@@ -152,6 +153,7 @@ namespace Chan
     /// <summary>
     /// All receiver-chan clients will use provided config when created in GetAsync.
     /// Calling this before GetAsync for every type is necessary.
+    /// If this were implicit, exceptions could be lost.
     /// </summary>
     /// <returns>Task which collects exceptions in client.</returns>
     /// <param name="cfg">configuration for client</param>
