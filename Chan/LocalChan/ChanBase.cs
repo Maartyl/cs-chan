@@ -1,21 +1,31 @@
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Chan
 {
   //this partially handles closing of channel, not synchronization
   //base for local chans
   public abstract class ChanBase<TMsg> : IChan<TMsg> {
+    #region close
+
     //wraps result of first call to CloseOnce
     readonly TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
+    //cannot use closingTask.Promise..IsCompleted: set AFTER running CloseOnce
+    // - I have to set right away
+    ///bool but need Interlocked (0=false; otherwise true)
+    int isClosed = 0;
 
-    public bool Closed { get { return closingTaskPromise.Task.IsCompleted; } }
+    public bool Closed { get { return isClosed != 0; } }
+
+    /// retVal == this call changed to closed
+    bool SetClosed() {
+      return 0 == Interlocked.Exchange(ref isClosed, 1);
+    }
 
     public Task Close() {
-      if (!Closed)
-        lock (closingTaskPromise)
-          if (!Closed)
-            closingTaskPromise.SetResult(CloseOnce());
+      if (!Closed && SetClosed())
+        closingTaskPromise.SetResult(CloseOnce());
       return AfterClosed();
     }
 
@@ -27,6 +37,8 @@ namespace Chan
     public Task AfterClosed() {
       return closingTaskPromise.Task.Flatten();
     }
+
+    #endregion
 
     ///after Closing channel: returns if all messages have been "received"
     /// (after close:) after true once, it should never be false again
