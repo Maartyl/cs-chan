@@ -63,6 +63,9 @@ namespace Chan
 
     ///Opens underlying WCF service for accessing net-chans remotely.
     public void StartServer(Uri address, Binding binding) {
+      if (binding == null) throw new ArgumentNullException("binding");
+      if (address == null) throw new ArgumentNullException("address");
+
       netChanProviderHost.AddServiceEndpoint(
         typeof(INetChanProvider), binding, address);
       netChanProviderHost.Open();
@@ -89,47 +92,114 @@ namespace Chan
 
     #region creation
 
+    /// <summary>
+    /// Creates a local chan that can be accessed only locally through Uri without Authority.
+    /// </summary>
+    /// <returns>Task collecting exceptions through creation, outside changes, ...</returns>
+    /// <param name="name">Absolute Path of Uri while accessing. Leading '/' is ignored.
+    ///  If specifies anything after path (query/fragment), those are ignored. Must be valid Uri path.</param>
+    /// <param name="type">DistributionType</param>
+    /// <typeparam name="T">Type of messages sent through this chan.</typeparam>
     public Task CreateLocalChan<T>(string name, ChanDistributionType type = ChanDistributionType.FirstOnly) {
+      if (name == null) throw new ArgumentNullException("name");
+
       name = normalizeChanName(name);
-      if (locals.Keys.Contains(name))
-        throw new ArgumentException("chan with given name already exists");
+      lock (locals) //I'm aware of race: not thread safe class
+        if (locals.Keys.Contains(name)) throw new ArgumentException("chan with given name already exists");
       var c = new ChanAsync<T>();
-      locals.Add(name, new ChanBox(Chan.FactoryFor(type, c, c)));
+      lock (locals)
+        locals.Add(name, new ChanBox(Chan.FactoryFor(type, c, c)));
       return c.AfterClosed();
     }
 
+    /// <summary>
+    /// Creates a network-accessible chan that can be accessed through Uri with Authority. 
+    /// Authority has to describe 'this' computer and port on which is ChanStore started.
+    /// </summary>
+    /// <returns>Task collecting exceptions through creation, outside changes, ...</returns>
+    /// <param name="name">Absolute Path of Uri while accessing. Leading '/' is ignored.
+    ///  If specifies anything after path (query/fragment), those are ignored. Must be valid Uri path.</param>
+    /// /// <param name="cfg">Configuration file, specifing defaults and SerDes to serialize messages.
+    ///  It is recommended to use NetChanConfig.Default (and possibly modify it).</param>
+    /// <param name="type">DistributionType</param>
+    /// <typeparam name="T">Type of messages sent through this chan. If type is not serializable, custom ISerDes must be provided.</typeparam>
     public Task CreateNetChan<T>(string name, NetChanConfig<T> cfg, ChanDistributionType type = ChanDistributionType.FirstOnly) {
+      if (name == null) throw new ArgumentNullException("name");
+      cfgNullCheck(cfg);
+      
       name = normalizeChanName(name);
-      if (locals.Keys.Contains(name))
-        throw new ArgumentException("chan with given name already exists");
+      lock (locals) //I'm aware of race: not thread safe class
+        if (locals.Keys.Contains(name)) throw new ArgumentException("chan with given name already exists");
       var dtf = Chan.FactoryFor<T>(type);
       var box = Chan.FromChanCrossPair(dtf, dtf, (l, r) => new ChanBox(l, new NetChanServer<T>(r, cfg, name, type)));
-      locals.Add(name, box);
+      lock (locals)
+        locals.Add(name, box);
       return box.Server.AfterClosed();
     }
 
+    /// <summary>
+    /// All sender-chan clients will use provided config when created in GetAsync.
+    /// Calling this before GetAsync for every type is necessary.
+    /// </summary>
+    /// <returns>Task which collects exceptions in client.</returns>
+    /// <param name="cfg">configuration for client</param>
+    /// <typeparam name="T">chan message type</typeparam>
     public Task PrepareClientSenderForType<T>(NetChanConfig<T> cfg) {
-      lock (clientSenders) {
-        if (clientSenders.ContainsKey(typeof(T)))
-          throw new ArgumentException("Client configuration for type is present.");
-        return (clientSenders[typeof(T)] = new NetChanClientCacheSender<T>(cfg)).CollectedExceptions; 
-      }
+      return PrepareClientForType<T, NetChanClientCacheSender, IChanSenderFactory<Unit>>
+        (cfg, c => new NetChanClientCacheSender<T>(c), clientSenders);
     }
 
+    /// <summary>
+    /// All receiver-chan clients will use provided config when created in GetAsync.
+    /// Calling this before GetAsync for every type is necessary.
+    /// </summary>
+    /// <returns>Task which collects exceptions in client.</returns>
+    /// <param name="cfg">configuration for client</param>
+    /// <typeparam name="T">chan message type</typeparam>
     public Task PrepareClientReceiverForType<T>(NetChanConfig<T> cfg) {
-      lock (clientReceivers) {
-        if (clientReceivers.ContainsKey(typeof(T)))
+      return PrepareClientForType<T, NetChanClientCacheReceiver, IChanReceiverFactory<Unit>>
+        (cfg, c => new NetChanClientCacheReceiver<T>(c), clientReceivers);
+    }
+
+    static Task PrepareClientForType<T, TC, TT>(NetChanConfig<T> cfg, Func<NetChanConfig<T>, TC> builder, Dictionary<Type,TC> clients)
+      where TC : NetChanClientCache<TT> {
+      cfgNullCheck(cfg);
+
+      lock (clients)
+        if (clients.ContainsKey(typeof(T)))
           throw new ArgumentException("Client configuration for type is present.");
-        return (clientReceivers[typeof(T)] = new NetChanClientCacheReceiver<T>(cfg)).CollectedExceptions; 
-      }
+        else return (clients[typeof(T)] = builder(cfg)).CollectedExceptions; 
     }
 
+    static void cfgNullCheck<T>(NetChanConfig<T> cfg) {
+      if (cfg == null) throw new ArgumentNullException("cfg");
+      if (cfg.SerDes == null)
+        throw new ArgumentNullException("" + "cfg.SerDes", "Not serializable types must provide custom ISerDes.");
+    }
+
+    /// <summary>
+    /// Provide default binding for given Uri.
+    /// Uri without authority will be ignored as it has to be Uri for accesing remote chans.
+    /// This binding will be used, if null provided in GetAsync, instead of DefaultBinding.
+    /// </summary>
     public void RegisterClientSenderBinding(Uri chan, Binding binding) {
-      clientBindingsSender[chan.Normalize()] = binding;
+      RegisterClientBinding(chan, binding, clientBindingsSender);
     }
 
+    /// <summary>
+    /// Provide default binding for given Uri.
+    /// Uri without authority will be ignored as it has to be Uri for accesing remote chans.
+    /// This binding will be used, if null provided in GetAsync, instead of DefaultBinding.
+    /// </summary>
     public void RegisterClientReceiverBinding(Uri chan, Binding binding) {
-      clientBindingsReceiver[chan.Normalize()] = binding;
+      RegisterClientBinding(chan, binding, clientBindingsReceiver);
+    }
+
+    static void RegisterClientBinding(Uri chan, Binding binding, Dictionary<Uri, Binding> defaults) {
+      ChanUriValidation(chan);
+      if (!string.IsNullOrEmpty(chan.Authority))
+        lock (defaults)
+          defaults[chan.Normalize()] = binding;
     }
 
     #endregion
@@ -211,7 +281,7 @@ namespace Chan
     public async Task<IChanReceiver<T>> GetReceiverAsync<T>(Uri chanUri, Binding binding = null) {
       ChanUriValidation(chanUri);
 
-      return chanUri.Authority == "" 
+      return string.IsNullOrEmpty(chanUri.Authority)
         ? GetLocalReceiver<T>(chanUri.AbsolutePath) 
           : GetReceiverAndRememberToFree<T>(await GetClient<T, IChanReceiverFactory<Unit>, NetChanClientCacheReceiver>(
         chanUri, clientBindingsReceiver, binding, clientReceivers));
@@ -230,7 +300,7 @@ namespace Chan
     public async Task<IChanSender<T>> GetSenderAsync<T>(Uri chanUri, Binding binding = null) {
       ChanUriValidation(chanUri);
 
-      return chanUri.Authority == "" 
+      return string.IsNullOrEmpty(chanUri.Authority)
         ? GetLocalSender<T>(chanUri.AbsolutePath) 
           : GetSenderAndRememberToFree<T>(await GetClient<T, IChanSenderFactory<Unit>, NetChanClientCacheSender>(
         chanUri, clientBindingsSender, binding, clientSenders));
@@ -259,16 +329,25 @@ namespace Chan
       return freeChans.TryGetValue(chan, out remover) && remover();
     }
 
+    ///Notify system to no longer send messages to this chan.
+    ///(Doesn't really make as much sense as I had hoped in the beginning)
     public bool Free<T>(IChanSender<T> chan) {
       return Free(typeof(T), chan);
     }
 
+    ///Notify system to no longer send messages to this chan.
+    ///(Doesn't really make as much sense as I had hoped in the beginning)
     public bool Free<T>(IChanReceiver<T> chan) {
       return Free(typeof(T), chan);
     }
 
-    //closes all chans; cleares cache; returns accumulated Close etc...
-    public Task CloseAll(bool requireAllFreed = false) {
+    ///closes all chans; cleares cache; returns accumulated Close etc...
+    public Task CloseAll() {
+      return CloseAll(false);
+    }
+
+    ///closes all chans; cleares cache; returns accumulated Close etc...
+    public Task CloseAll(bool requireAllFreed) {
       if (requireAllFreed && freeChans.Count != 0)
         throw new InvalidOperationException("There are still unfreed chans. (count: " + freeChans.Count + ")");
       
@@ -277,6 +356,7 @@ namespace Chan
         freeClosers = freeChans.Values.ToList();
       foreach (var fv in freeClosers) //free everything
         fv(); //THOUGHT: what would something retuning false mean? - it's always the correct chan...
+      //^ it would mean it's probably just ChanWrapFactory...
 
       return Task.WhenAll(Combine(
         from l in locals

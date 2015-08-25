@@ -17,7 +17,8 @@ namespace Chan
       var c2 = new ChanAsync<TM>();
       return f(fl(c1, c2), fr(c2, c1));
     }
-    //this completes with close of either first (cancel) or both (if propagates) channels.
+
+    ///this completes with close of either first (cancel) or both (if propagates) channels.
     public static Task Pipe<T>(this IChanReceiver<T> rchan, IChanSender<T> schan, bool propagateClose = true, Action<T> tee = null) {
       return Pipe(rchan, schan, x => x, propagateClose, tee);
     }

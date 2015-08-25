@@ -1,10 +1,21 @@
 todo
 
+Chan
+====
+
+Library for sending messages between unrelated subsystems or parts of application possibly over internet.
+
+
+# About
 
 
 
-- Prerequisities
+# Prerequisities
+
+
 - Getting Started
+- Basic idea how works from perspective of usage (WCF...)
+- Basic idea how works internally
 - API overview
 - Example
     - Extra simple, direclty in Program
@@ -12,13 +23,14 @@ todo
         - Shows how works.
     - Chat app
         - Include 'user' documentation on how to use that
-    - Quite nice actually
     - Also shows Dispatch idea
+        - Async version with replies is an idea of future extension/lib
+
 
 
 # School part
 
-- Used Technologies
+## Used Technologies
     - Sockets
         - My TCP protocol
     - WCF
@@ -30,3 +42,8 @@ todo
     - Reflection
         - in generating default SerDes
     - Serialization
+    
+    
+    
+    
+    
