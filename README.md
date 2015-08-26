@@ -56,6 +56,8 @@ Good but terrible idea is for .Send to return Task<Task<TMsg>>, where first task
 
 ## Get
 
+Chan is a normal .NET library.
+
 ### Prerequisite
 
 - .NET4.5 (or mono equivalent)

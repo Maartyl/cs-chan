@@ -1,11 +1,15 @@
 ﻿<Properties StartupItem="Chat/Chat.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chat/Program.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/NetChan/NetChanTBase.cs">
     <Files>
-      <File FileName="Chat/GuiChat.cs" Line="46" Column="7" />
+      <File FileName="Chat/GuiChat.cs" Line="98" Column="1" />
       <File FileName="Chan/Tests/ChanSimpleTest.cs" Line="1" Column="1" />
-      <File FileName="Chat/Program.cs" Line="86" Column="26" />
-      <File FileName="Chan/ChanStore.cs" Line="156" Column="57" />
+      <File FileName="Chat/Program.cs" Line="99" Column="59" />
+      <File FileName="Chan/ChanFactory.cs" Line="47" Column="1" />
+      <File FileName="Chan/ChanStore.cs" Line="365" Column="1" />
+      <File FileName="Chan/NetChan/NetChanServer.cs" Line="14" Column="19" />
+      <File FileName="Chan/LocalChan/ChanBase.cs" Line="26" Column="26" />
+      <File FileName="Chan/NetChan/NetChanTBase.cs" Line="8" Column="40" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

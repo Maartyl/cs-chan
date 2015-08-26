@@ -5,36 +5,32 @@ namespace Chan
 {
   public abstract class NetChanTBase<T> : NetChanBase, IChanBase {
     //I present myself to world through membrane; using other side of it from the inside
+    //different for sender and receiver
     //protected readonly IChan<T> World;
     protected readonly ISerDes<T> SerDes;
     //wraps result of first call to CloseOnce
-    readonly TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
+    readonly InvokeOnceEmbeddable closing;
 
-    protected NetChanTBase(NetChanConfig<T> cfg):base(cfg) {
+    protected NetChanTBase(NetChanConfig<T> cfg) : base(cfg) {
       //World = cfg.InternalChannel;
       var sd = cfg.SerDes;
       if (sd == null)
         throw new ArgumentNullException("type(" + typeof(T) + ") is not serializable and requires valid SerDes`1");
       SerDes = sd;
+      closing = new InvokeOnceEmbeddable(CloseOnce);
     }
 
-    public bool Closed { get { return closingTaskPromise.Task.IsCompleted; } }
+    public bool Closed { get { return closing.Invoked; } }
 
     public virtual Task Close() {
-      if (!Closed)
-        lock (closingTaskPromise)
-          if (!Closed) 
-            closingTaskPromise.SetResult(CloseOnce());
-      return AfterClosed();
+      return closing.Invoke();
     }
 
     ///only called once
     protected abstract Task CloseOnce();
 
-    public async Task AfterClosed() {
-      DbgCns.Trace(this, "after-closed0");
-      await await closingTaskPromise.Task;
-      DbgCns.Trace(this, "after-closedE");
+    public Task AfterClosed() {
+      return closing.AfterInvoked();
     }
   }
 }
