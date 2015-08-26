@@ -33,7 +33,6 @@ namespace Chan
     /// </summary>
     /// <param name="wsdlPort">default: -1 == no wsdl</param>
     public ChanStore(int wsdlPort) {
-      LimitClientIP = true;
       netChanProviderHost = new ServiceHost(this/*what implements interface*/, wsdlPort > 0 ? new[] {
         new Uri("http://" + Environment.MachineName + ":" + wsdlPort + "/ChanStore")
       } : new Uri[0]);
@@ -393,24 +392,8 @@ namespace Chan
 
     #region INetChanProvider implementation
 
-    ///true == client has to be on same IP as WCF request
-    ///(default: true)
-    public bool LimitClientIP { get; set; }
-
-    ///this HAS to be called only from within WCF ~handler; 
-    ///uses some WCF global state thing
-    IPAddress AddressToListenOn() {
-      if (!LimitClientIP)
-        return IPAddress.Any;
-
-      RemoteEndpointMessageProperty endpointP = //address of sender (who requests chan)
-        OperationContext.Current.IncomingMessageProperties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
-      return endpointP == null ? IPAddress.Any : IPAddress.Parse(endpointP.Address);
-    }
-
     Task<TcpClient> NetChanListen(out int port) { 
-      var addr = AddressToListenOn();
-      var listener = new TcpListener(addr, 0);//0 == some not used port
+      var listener = new TcpListener(IPAddress.Any, 0);//0 == some not used port
       listener.Start(); //initializes socket and assignes port
       port = ((IPEndPoint) listener.LocalEndpoint).Port;
       return TcpListenerAcceptOne(listener);

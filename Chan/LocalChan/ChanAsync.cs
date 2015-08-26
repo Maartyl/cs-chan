@@ -62,7 +62,13 @@ namespace Chan
         } else {
           DebugCounter.Incg(this, "s.w");
           DbgCns.Trace(this, "s.w");
-          return DeliverAsync.Start(msg, waiters.Add);
+          try {
+            return DeliverAsync.Start(msg, waiters.Add);
+          } catch (InvalidOperationException ex) {
+            //after AddingCompleted
+            //- TryAdd is not better: in this case also throws
+            return CancelledTask;
+          }
         }
     }
 

@@ -131,6 +131,9 @@ namespace Chat
 
       } catch (EndpointNotFoundException ex) {
         connector.RunError("no server found".ArgSrc("connect " + addr));
+        #if DEBUG
+        //ex.PipeEx(connector, "connect.notFound " + addr);
+        #endif
       } catch (Exception ex) {
         ex.PipeEx(connector, "connect " + addr);
       } finally {

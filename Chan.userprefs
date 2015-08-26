@@ -1,8 +1,10 @@
 ﻿<Properties StartupItem="Chat/Chat.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Chan/InvokeOnceEmbeddable.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chat/Gui.cs">
     <Files>
-      <File FileName="Chan/InvokeOnceEmbeddable.cs" Line="1" Column="1" />
+      <File FileName="Chan/NetChan/NetChanClientCache.cs" Line="47" Column="66" />
+      <File FileName="Chat/Gui.cs" Line="205" Column="35" />
+      <File FileName="Chat/ChatClient.cs" Line="135" Column="23" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

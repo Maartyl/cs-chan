@@ -69,7 +69,6 @@
     <Compile Include="ChanTee.cs" />
     <Compile Include="Chan.cs" />
     <Compile Include="NetChan\NetChanServer.cs" />
-    <Compile Include="InvokeOnceEmbeddable.cs" />
     <Compile Include="NetChan\INetChanProvider.cs" />
     <Compile Include="NetChan\NetChanClientCache.cs" />
     <Compile Include="NetChan\NetChanClientCacheReceiver.cs" />
@@ -89,6 +88,7 @@
     <Compile Include="Helpers\Unit.cs" />
     <Compile Include="Helpers\UriHelpers.cs" />
     <Compile Include="Helpers\TaskCompletionCallback.cs" />
+    <Compile Include="Helpers\InvokeOnceEmbeddable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

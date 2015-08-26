@@ -44,8 +44,8 @@ namespace Chan
       var client = new NetChanProviderClient(binding, new EndpointAddress(serverAddress));
 
       //set 10s timeout instead of 1 min...
-      client.InnerChannel.OperationTimeout = new TimeSpan(0, 0, 10);
-      client.Open();
+      client.InnerChannel.OperationTimeout = new TimeSpan(0, 0, 30);
+      //client.Open();
       var info = Request(client, chanLocalUri);
       client.Close();
       return info;

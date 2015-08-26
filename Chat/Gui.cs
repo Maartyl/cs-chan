@@ -5,12 +5,14 @@ using System.Drawing;
 namespace Chat
 {
   public class Gui {
-    static readonly Font FONT = new Font("Monospace", 12);
-    FormWithCompletion self;
-    TextBox cmdBar;
-    Panel area;
-    RichTextBox msgBoard;
-    Views views = new Views();
+    
+    static readonly Font FONT = selectFont();
+    //static readonly Font FONT = new Font("Monospace", 12);
+    readonly FormWithCompletion self;
+    readonly TextBox cmdBar;
+    readonly Panel area;
+    readonly RichTextBox msgBoard;
+    readonly Views views = new Views();
 
     public event Action<string> Command = cmd => {};
     public event Action<string> CompletionRequest = cmd => {};
@@ -71,6 +73,7 @@ namespace Chat
     }
 
     public void SwitchToHelp(string help) {
+      help = help.Replace("\n", Environment.NewLine);
       if (!object.ReferenceEquals(views.Help.Text, help))
         views.Help.Text = help;
       SwitchTo(views.Help);
@@ -189,6 +192,22 @@ namespace Chat
           return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
+      }
+    }
+
+    static Font selectFont() {
+      Func<string,FontFamily> ff = s => {
+        try {
+          return new FontFamily(s);
+        } catch (Exception) {
+          return null;
+        }
+      };
+      try {
+        return  new Font(ff("Monospace") ?? ff("Consolas") ?? FontFamily.GenericMonospace, 12);
+      } catch (Exception ex) {
+        Console.Error.WriteLine(ex);
+        return default(Font);
       }
     }
   }

@@ -37,7 +37,7 @@ namespace Chan
 
     public Uri RequestUri { get; private set; }
 
-    public NetChanProviderException(NetChanConnectionInfo info, Uri requestUri) : base(info.ErrorMessage) {
+    public NetChanProviderException(NetChanConnectionInfo info, Uri requestUri) : base(info.ErrorType + ": " + info.ErrorMessage) {
       RequestUri = requestUri;
       if (info.ErrorCode != 0)
         this.HResult = info.ErrorCode;
