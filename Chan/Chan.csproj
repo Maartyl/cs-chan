@@ -69,7 +69,6 @@
     <Compile Include="ChanTee.cs" />
     <Compile Include="Chan.cs" />
     <Compile Include="NetChan\NetChanServer.cs" />
-    <Compile Include="TaskCompletionCallback.cs" />
     <Compile Include="InvokeOnceEmbeddable.cs" />
     <Compile Include="NetChan\INetChanProvider.cs" />
     <Compile Include="NetChan\NetChanClientCache.cs" />
@@ -77,7 +76,9 @@
     <Compile Include="NetChan\NetChanClientCacheSender.cs" />
     <Compile Include="NetChan\NetChanProviderClient.cs" />
     <Compile Include="ChanCombiner.cs" />
-    <Compile Include="ChanFactory.cs" />
+    <Compile Include="ChanFactory.cs">
+      <DependentUpon>ISerDes.cs</DependentUpon>
+    </Compile>
     <Compile Include="LocalChan\ChanBase.cs" />
     <Compile Include="Tests\ChanSimpleTest.cs" />
     <Compile Include="Helpers\DbgCns.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Helpers\TaskHelpers.cs" />
     <Compile Include="Helpers\Unit.cs" />
     <Compile Include="Helpers\UriHelpers.cs" />
+    <Compile Include="Helpers\TaskCompletionCallback.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

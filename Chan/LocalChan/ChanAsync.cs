@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace Chan
 {
-  public class ChanAsync<T> : ChanBase<T> {
+  public sealed class ChanAsync<T> : ChanBase<T> {
     readonly BlockingCollection<TaskCompletionCallback<T, Task>> promises;
     readonly BlockingCollection<DeliverAsync<T>> waiters;
 
@@ -13,9 +13,11 @@ namespace Chan
       waiters = new BlockingCollection<DeliverAsync<T>>(sendTaskCountLimit);
     }
 
-    public ChanAsync():this(500,500) {
+    public ChanAsync() : this(500, 500) {
     }
+
     #region implemented abstract members of Chan
+
     protected override bool NoMessagesLeft() {
       return waiters.Count == 0;
     }
@@ -81,6 +83,7 @@ namespace Chan
       }
       DbgCns.Trace(this, "close-onceE");
     }
+
     #endregion
   }
 }

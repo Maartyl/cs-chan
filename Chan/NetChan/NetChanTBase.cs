@@ -30,7 +30,7 @@ namespace Chan
     protected abstract Task CloseOnce();
 
     public Task AfterClosed() {
-      return closing.AfterInvoked();
+      return closing.AfterInvoked;
     }
   }
 }

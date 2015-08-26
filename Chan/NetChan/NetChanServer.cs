@@ -12,18 +12,17 @@ namespace Chan
     readonly protected TaskCollector connectingExCollector = new TaskCollector();
     readonly protected TaskCollector runningExCollector = new TaskCollector();
     readonly InvokeOnceEmbeddable closing;
-    volatile bool isClosed = false;
 
     protected NetChanServer(IChanFactory<Unit> localChan) {
       closing = new InvokeOnceEmbeddable(CloseOnce);
       this.localChan = localChan;
     }
 
-    public bool IsClosed { get { return isClosed; } protected set { isClosed = value; } }
+    public bool IsClosed { get { return closing.Invoked; } }
 
     public ChanDistributionType Type { get; protected set; }
 
-    public string Name{ get; protected set; }
+    public string Name { get; protected set; }
 
     ///does not include netIn, netOut (if does, will be ignored)
     public NetChanConfig Config { get; protected set; }
@@ -43,7 +42,7 @@ namespace Chan
     }
 
     public Task AfterClosed() {
-      return closing.AfterInvoked();
+      return closing.AfterInvoked;
     }
 
     protected abstract Task CloseOnce();
@@ -109,7 +108,6 @@ namespace Chan
     }
 
     protected override Task CloseOnce() {
-      IsClosed = true;
       runningExCollector.Close();
       connectingExCollector.Close();
       var sc = senders.Select(x => x.Close());
