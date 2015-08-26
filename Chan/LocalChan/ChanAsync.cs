@@ -24,52 +24,61 @@ namespace Chan
 
     protected override Task<T> ReceiveAsyncImpl(Func<T, Task> sendCallback) {
       DeliverAsync<T> da;
-      lock (waiters)
-        if (waiters.TryTake(out da)) {
-          DebugCounter.Incg(this, "r.w");
-          DbgCns.Trace(this, "r.w");
-          return Task.FromResult(da.Deliver(sendCallback));
-        } else {
+      //locking is for cases: 0-1 promises, 0-1 waiters and just moving around that
+      // (which is quite common)
+      lock (waiters) if (!waiters.TryTake(out da)) {
           DebugCounter.Incg(this, "r.p");
           DbgCns.Trace(this, "r.p");
           var p = new TaskCompletionCallback<T, Task>(sendCallback);
+          //must stay locked until added
           promises.Add(p);
           return p.Task;
-        }
+        } 
+      { /*else outside of lock: no-one else can deliver this da*/
+        DebugCounter.Incg(this, "r.w");
+        DbgCns.Trace(this, "r.w");
+        return Task.FromResult(da.Deliver(sendCallback));
+      }
     }
 
     protected override Task<T> ReceiveAsyncCancelled(Func<T, Task> sendCallback, Task<T> cancelled) {
       DeliverAsync<T> da;
-      lock (waiters)
-        if (waiters.TryTake(out da)) {
-          DebugCounter.Incg(this, "c.w");
-          DbgCns.Trace(this, "c.w");
-          return Task.FromResult(da.Deliver(sendCallback));
-        } else {
-          DebugCounter.Incg(this, "c.c");
-          DbgCns.Trace(this, "c.c");
-          return cancelled;
-        }
+      //why is this locked?
+      // - I think BlockingQueue is concurrent...
+      // - Other then that, I'm not changing anything... (adding)
+      //lock (waiters)
+      if (waiters.TryTake(out da)) {
+        DebugCounter.Incg(this, "c.w");
+        DbgCns.Trace(this, "c.w");
+        return Task.FromResult(da.Deliver(sendCallback));
+      } else {
+        DebugCounter.Incg(this, "c.c");
+        DbgCns.Trace(this, "c.c");
+        return cancelled;
+      }
     }
 
     protected override Task SendAsyncImpl(T msg) {
       TaskCompletionCallback<T, Task> p;
-      lock (waiters)
-        if (promises.TryTake(out p)) {
-          DebugCounter.Incg(this, "s.p");
-          DbgCns.Trace(this, "s.p");
-          return p.SetResult(msg);
-        } else {
-          DebugCounter.Incg(this, "s.w");
-          DbgCns.Trace(this, "s.w");
+      //locking is for cases: 0-1 promises, 0-1 waiters and just moving around that
+      // (which is quite common)
+      lock (waiters) if (!promises.TryTake(out p))
           try {
+            DebugCounter.Incg(this, "s.w");
+            DbgCns.Trace(this, "s.w");
+            //must stay locked until added: someone could change waiter
             return DeliverAsync.Start(msg, waiters.Add);
-          } catch (InvalidOperationException ex) {
-            //after AddingCompleted
+          } catch (InvalidOperationException) {
+            DebugCounter.Incg(this, "s.wx");
+            //after AddingCompleted : It throws ex but I just want to cancel adding
             //- TryAdd is not better: in this case also throws
             return CancelledTask;
           }
-        }
+      {/*else outside of lock (no more chaning; no-one else can Set the promise)*/
+        DebugCounter.Incg(this, "s.p");
+        DbgCns.Trace(this, "s.p");
+        return p.SetResult(msg);
+      }
     }
 
     protected async override Task CloseOnce() {
