@@ -35,26 +35,23 @@ namespace Chan
 
     #region IChanBase implementation
 
-    //wraps result of first call to CloseOnce
-    readonly TaskCompletionSource<Task> closingTaskPromise = new TaskCompletionSource<Task>();
+    readonly InvokeOnceEmbeddable closing;
 
-    public bool Closed { get { return closingTaskPromise.Task.IsCompleted; } }
+    protected ChanFactory() {
+      closing = new InvokeOnceEmbeddable(CloseOnce);
+    }
+
+    public bool Closed { get { return closing.Invoked; } }
 
     public virtual Task Close() {
-      if (!Closed)
-        lock (closingTaskPromise)
-          if (!Closed)
-            closingTaskPromise.SetResult(CloseOnce());
-      return AfterClosed();
+      return closing.Invoke();
     }
 
     ///only called once
-    protected virtual Task CloseOnce() {
-      return Task.Delay(0);
-    }
+    protected abstract Task CloseOnce() ;
 
     public Task AfterClosed() {
-      return closingTaskPromise.Task.Flatten();
+      return closing.AfterInvoked;
     }
 
     #endregion

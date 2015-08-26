@@ -236,25 +236,25 @@ namespace Chat
         Action<string, Action<CmdArg>> xRegister = (cmd, a) => conn.Register(cmd, x.InSTAThread(a));
         var help = @"Help:
 Type (messages) to line at bottom of window.
-Commands start with ':'. 
+Commands start with ':'.
 All messages are trimmed by default, so to write ':-)' just write ' :-)'.
-The '#' are not actualy recognized comment starts.
+Use tab for command completion.
 
-:chat               # show message board
-:server.start <port># starts server and DOES NOT connect to it
+:chat                    # show message board
+:server.start <port>     # starts server and DOES NOT connect to it
 :server.stop
-:connect <host:port># default port is " + settings.DefaultServerPort + @"
-:disconnect         # closes client
-:host <port>        # :server.start, :connect localhost
-:join <host> <name> # :connect <host>, :name <name>
-:name <new name>    # get or set; 'anon' by default, (' '->'_')
-:down, :d           # scroll to end of message board
-:exit
-:help, :h           # show this help
-:send <msg>         # send msg as it is ; even just whitespace / nothing...
-:text <theText>     # alias ~ :send <trim($theText) ?? cancel> 
-                    # handles 'just text' 
-                    # wouldn't send nothing
+:wsdl                    # open server with wsdl description of service to access chans
+:connect <host:port>     # default port is " + settings.DefaultServerPort + @"
+:disconnect              # closes client
+:host <port>             # :server.start, :connect
+:join <host> <name>      # :connect <host>, :name <name>
+:name <new name>         # get or set; 'anon' by default
+:down, :d                # scroll to end of message board
+:exit, :quit
+:help, :h                # show this help
+:send <msg>              # send msg as it is ; even just whitespace / nothing...
+:text <theText>          # == :send <trim($theText) ?? cancel> 
+                         # wouldn't send nothing
 if line doesn't start with ':': gets translated to: ':text <$line>'
 ";
 
@@ -346,13 +346,11 @@ if line doesn't start with ':': gets translated to: ':text <$line>'
 
       for (; prefixLen < strings[0].Length; prefixLen++) {
         char c = strings[0][prefixLen];
-        for (int i = 1; i < strings.Length; i++) {
+        for (int i = 1; i < strings.Length; i++)
           if (prefixLen >= strings[i].Length ||
-              strings[i][prefixLen] != c) {
+              strings[i][prefixLen] != c)
             // Mismatch found
             return strings[i].Substring(0, prefixLen);
-          }
-        }
       }
       return strings[0];
     }

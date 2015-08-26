@@ -42,7 +42,7 @@ namespace Chan
     }
 
     /// <summary>
-    /// Task equivalent with the one returned from provided delegate.
+    /// Task equivalent to the one returned from provided delegate.
     /// </summary>
     /// <returns>Task returned from first call to provided delegate. - Not necessarily the same object.</returns>
     public Task AfterInvoked { get { return invokingTaskPromise.Task.Flatten(); } }

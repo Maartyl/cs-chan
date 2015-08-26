@@ -1,13 +1,11 @@
-todo
-
 Chan
 ====
 
-Library for sending messages between unrelated subsystems or parts of application possibly over internet.
+Library for sending messages between unrelated subsystems or parts of application possibly over an internet.
 
 ## About
 
-Chans are generic, one-directional asynchronous channels between multiple senders and receivers.
+Chans are generic, one-directional asynchronous channels between (possibly) multiple senders and receivers.
 
 #### Ideas
 
@@ -16,7 +14,7 @@ Chans are generic, one-directional asynchronous channels between multiple sender
     - Although, net-chans currently support messages up to 64 KiB in size when serialized.
 - Chans can be composed into networks and trafic observed in connection points.
 
-- System is not necessarilly dependent on C# and it is possible to write parts of system that would seamlessly integrate in other languages as well.
+- System is not necessarily dependent on C# and it is possible to write parts of system that would seamlessly integrate in other languages as well.
     - Although, currently WCF is used for opening net-chans.
 - All 'nodes' able to act as servers are equal.
     - Clients that cannot be servers can still do everything else, but host chans.
@@ -88,6 +86,8 @@ Chan is a normal .NET library.
 
 ------------------------------
 
+# TODO
+
 - Getting Started
 - Basic idea how works from perspective of usage (WCF...)
 - Basic idea how works internally
@@ -102,7 +102,7 @@ Chan is a normal .NET library.
         - Async version with replies is an idea of future extension/lib
 
 
-
+------------------------------
 ## School part
 This has been created as a school project but with the intention to also use it for other projects.
 

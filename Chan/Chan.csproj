@@ -76,9 +76,7 @@
     <Compile Include="NetChan\NetChanClientCacheSender.cs" />
     <Compile Include="NetChan\NetChanProviderClient.cs" />
     <Compile Include="ChanCombiner.cs" />
-    <Compile Include="ChanFactory.cs">
-      <DependentUpon>ISerDes.cs</DependentUpon>
-    </Compile>
+    <Compile Include="ChanFactory.cs" />
     <Compile Include="LocalChan\ChanBase.cs" />
     <Compile Include="Tests\ChanSimpleTest.cs" />
     <Compile Include="Helpers\DbgCns.cs" />
