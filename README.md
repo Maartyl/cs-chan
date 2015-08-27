@@ -20,6 +20,7 @@ Chans are generic, one-directional asynchronous channels between (possibly) mult
     - Clients that cannot be servers can still do everything else, but host chans.
     
 - WCF allows for authentication when opening chans.
+    - Although it is not implemented in Chat test application.
 
 #### Influences
 
@@ -30,8 +31,8 @@ Chans are generic, one-directional asynchronous channels between (possibly) mult
     - not really 'call methods' on them...
         - This allows for more cooperative, yet less dependent systems.
 - To big part other inter-process communication, like TCP or especially unix pipes.
-    - Chans are similar to pipes but allow multiple senders and receivers and arbitrary message types, not just chars.
-    - Chan<byte> with only 1 sender and receiver would be very similar. (only much slower. ^^)
+    - Chans are similar to pipes but support multiple receivers and arbitrary message types, not just chars.
+    - Chan\<byte\> with only 1 receiver would be very similar. (only much slower. ^^)
 
 - Systems for workload distribution
 - Event distribution and propagation
@@ -49,7 +50,7 @@ Simple Dispatch idea can be seen in Chat example application. Proper one should 
 
 Chans would then connect more local and more reactive parts built around Dispatch.
 
-Good but terrible idea is for .Send to return Task<Task<TMsg>>, where first task completes upon properly sending/enqueuing/... and second after received with possible reply or Exception thrown in receiver. - Which has many complications like: multiple receivers, possibly passing Exceptions around on the internet, ...
+Good but terrible idea is for .Send to return Task\<Task\<TMsg\>\>, where first task completes upon properly sending/enqueuing/... and second after received with possible reply or Exception thrown in receiver. - Which has many complications like: multiple receivers, possibly passing Exceptions around on the internet, ...
 
 
 ## Get
