@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Chan;
+using System.Net;
 
 namespace Chat
 {
@@ -214,6 +215,9 @@ namespace Chat
         }
       });
 
+      conn.Register(Cmd.Ip, _ => conn.RunOrDefault(Cmd.NotifySystem, 
+        string.Join<IPAddress>(", ", Dns.GetHostEntry("").AddressList).ArgSrc(Cmd.Ip)));
+
       #if DEBUG
       conn.Register("test", a => {
         conn.Run(Cmd.NotifyError, "test error".ArgSrc("err source"));
@@ -243,6 +247,7 @@ Use tab for command completion.
 :chat                    # show message board
 :server.start <port>     # starts server and DOES NOT connect to it
 :server.stop
+:ip                      # get local IP address(es)
 :wsdl                    # open server with wsdl description of service to access chans
 :connect <host:port>     # default port is " + settings.DefaultServerPort + @"
 :disconnect              # closes client
@@ -255,6 +260,7 @@ Use tab for command completion.
 :send <msg>              # send msg as it is ; even just whitespace / nothing...
 :text <theText>          # == :send <trim($theText) ?? cancel> 
                          # wouldn't send nothing
+
 if line doesn't start with ':': gets translated to: ':text <$line>'
 ";
 

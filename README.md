@@ -88,7 +88,7 @@ cs-chan is a normal .NET library.
 
 
 
-## API overview
+## Getting Started
 
 
 ## Example
@@ -102,7 +102,7 @@ cs-chan is a normal .NET library.
 - All messages from server are broadcasted to everyone connected, they send everything to server and it does nothing else.
 
 ### Chat
-Details are in [/Chat](Chat) folder in this repository.
+Details are in [/Chat](Chat) folder in this repository. It also includes very simple, limited and synchronous version of Dispatch mentioned in [Outlook](#outlook) section.
 
 ------------------------------
 
@@ -112,14 +112,6 @@ Details are in [/Chat](Chat) folder in this repository.
 - Basic idea how works from perspective of usage (WCF...)
 - Basic idea how works internally
 - API overview
-- Example
-    - Extra simple, direclty in Program
-        - Only 1 server, 1 client
-        - Shows how works.
-    - Chat app
-        - Include 'user' documentation on how to use that
-    - Also shows Dispatch idea
-        - Async version with replies is an idea of future extension/lib
 
 
 ------------------------------

@@ -24,6 +24,7 @@ namespace Chat
     public static readonly string Connect = "connect";
     public static readonly string Disconnect = "disconnect";
     public static readonly string NoCommand = " #nocommand";
+    public static readonly string Ip = "ip";
 
     public static readonly string CompletionRequest = " #completion.request";
     public static readonly string CompletionResponse = " #completion.response";
