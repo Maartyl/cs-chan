@@ -32,7 +32,7 @@ Chans are generic, one-directional asynchronous channels between (possibly) mult
         - This allows for more cooperative, yet less dependent systems.
 - To big part other inter-process communication, like TCP or especially unix pipes.
     - Chans are similar to pipes but support multiple receivers and arbitrary message types, not just chars.
-    - `Chan<byte>` with only 1 receiver would be very similar. (only much slower. ^^)
+    - `Chan<byte>` would be very similar. (only much slower. ^^)
 
 - Systems for workload distribution
 - Event distribution and propagation
@@ -66,6 +66,8 @@ Chans would then connect more local and more reactive parts built around Dispatc
 
 Good but terrible idea is for .Send to return `Task<Task<TMsg>>`, where first task completes upon properly sending/enqueuing/... and second after received with possible reply or Exception thrown in receiver. - Which has many complications like: multiple receivers, possibly passing Exceptions around on the internet, ...
 
+Currently does not work through NAT as WCF request opens a TCP on some port and sends that to client to connect to it. This is obviously not good but I realized it too late: I will change it once I move opening channels to TCP as well (once I know how/if to solve authentication).
+
 
 ## Get
 
@@ -90,6 +92,21 @@ cs-chan is a normal .NET library.
 
 ## Getting Started
 
+- Create chans on `ChanStore`
+    - `.Create{Local,Net}Chan<TMsg>(cfg)`
+    - where cfg is configuration; simplest: `NetChanConfig.MakeDefault<TMsg>()`
+        - If `TMsg` isn't serializable, you have to provide custom ISerDes.
+    - access the chans through `.Get{Sender,Receiver}{,Async}(uri)`
+    - where uri is: `chan:[<authority*>]/<chan name>`
+        - *: If accessing 'outside' end of a net-chan.
+    - Receivers then receive what counterparts on the same chan sent.
+        - net-chans are wired so that local and remote ends are connected.
+            - local: no authority specified
+            - remote: authority specified (localhost if local chan)
+    - Idea behind accessing through URI:
+        - Normal code shouldn't even know what Uri it using to access chans.
+    - Net-chans are only accessible after calling `.StartServer(port)`.
+        - Get URIs then have to specify this port.
 
 ## Example
 
@@ -108,7 +125,6 @@ Details are in [/Chat](Chat) folder in this repository. It also includes very si
 
 # TODO
 
-- Getting Started
 - Basic idea how works from perspective of usage (WCF...)
 - Basic idea how works internally
 - API overview
