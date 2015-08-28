@@ -4,7 +4,6 @@ Chan
 -----
 
 ## Chan idea
-
 Chans have two sides `IChanReceiver` and `IChanSender` with fairly obvious roles.
 
 What completion of `.Send` means can differ per type of chan, but basically accepted or rejected. In case of net-chans it can include exception why couldn't send.
@@ -12,15 +11,15 @@ What completion of `.Send` means can differ per type of chan, but basically acce
 Completion of `.Receive` provieds with the message.
 
 ### .Close
-After calling this all `.Send` will return cancelled tasks and so will `.Receive` after emptying internal queues.
+All subsequent calls to `.Send` will return cancelled tasks and so will `.Receive` after emptying internal queues.
 
 Close completes when chan is empty.
 
-### `.Receive(callback)`
-Special version of `.Receive` exists that can set how the task returned from `.Send` completes.
-This is especially useful for chaining chans.
-It does not work perfectly with broadcast chans.
-It only works for local chans.
+### .Receive(callback)
+- Special version of `.Receive` exists that can set how the task returned from `.Send` completes.
+- This is especially useful for chaining chans.
+- It does not work perfectly with broadcast chans.
+- It only works for local chans.
 
 ## Local Chans
 Originally, there was a couple drafts of which 2 survived and I implemented one.
@@ -50,20 +49,37 @@ Each ChanAsync contains 2 concurrent,blocking queues for following 2 scenarios:
 - balanced:
     - This can be solved by small over/under pressure or alternating of both.
 
-#### `.Send`
+#### .Send
     if any promise:
         deliver
     else:
-        enqueu waiter
-#### `.Receive`
+        enqueue waiter
+#### .Receive
     if any waiter:
         deliver
     else:
         enqueue promise
-        
 
 
+## Net Chans
+I originally didn't intend to create multiple versions. The original idea was for .Send to return a task mainly to inform about exceptions while sending. After I extended the idea to completing when received, idea arose to complete when receivwed for net-chans too. It would probably take really long before completing, though. That version is not implemented.
 
+Implemented version:
+
+The basic idea is binary TCP protocol. More details: [NetChan](NetChan).
+
+
+## Chan Store
+
+
+## Chan Utils
+
+### Event
+
+### Pipe
+
+
+## SerDes
 
 
 
