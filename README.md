@@ -96,17 +96,17 @@ cs-chan is a normal .NET library.
     - `.Create{Local,Net}Chan<TMsg>(cfg)`
     - where cfg is configuration; simplest: `NetChanConfig.MakeDefault<TMsg>()`
         - If `TMsg` isn't serializable, you have to provide custom ISerDes.
-    - access the chans through `.Get{Sender,Receiver}{,Async}(uri)`
-    - where uri is: `chan:[<authority*>]/<chan name>`
+- access the chans through `.Get{Sender,Receiver}{,Async}(uri)`
+    - where uri is: `chan:[//<authority*>]/<chan name>`
         - *: If accessing 'outside' end of a net-chan.
-    - Receivers then receive what counterparts on the same chan sent.
-        - net-chans are wired so that local and remote ends are connected.
-            - local: no authority specified
-            - remote: authority specified (localhost if local chan)
-    - Idea behind accessing through URI:
-        - Normal code shouldn't even know what Uri it using to access chans.
-    - Net-chans are only accessible after calling `.StartServer(port)`.
-        - Get URIs then have to specify this port.
+- Receivers then receive what counterparts on the same chan sent.
+    - net-chans are wired so that local and remote ends are connected.
+        - local: no authority specified
+        - remote: authority specified (`localhost` if local chan)
+- Idea behind accessing through URI:
+    - Normal code shouldn't even necessarily know what Uri it is using to access chans.
+- Net-chans are only accessible after calling `.StartServer(port)`.
+    - Get URIs then have to specify this port.
 
 ## Example
 
@@ -127,7 +127,7 @@ Details are in [/Chat](Chat) folder in this repository. It also includes very si
 
 - Basic idea how works from perspective of usage (WCF...)
 - Basic idea how works internally
-- API overview
+- API overview + internals overview
 
 
 ------------------------------

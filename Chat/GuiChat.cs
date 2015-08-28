@@ -9,10 +9,6 @@ namespace Chat
   static class GuiChat {
 
     public static void Start(Settings settings, Action<Connector, ChanStore> initExtra) {
-      #if DEBUG
-      //testParsing();
-      #endif
-
       var conn = new Connector();
       Init(settings, conn, initExtra);
       StartGui(conn, settings);
