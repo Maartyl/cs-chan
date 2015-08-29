@@ -9,6 +9,10 @@ namespace Chan
       return object.ReferenceEquals(r, s) ? (IChan<T>) r : new ChanCombiner<T>(r, s);
     }
 
+    public static ChanEvent<TMsg> Listen<TMsg>(IChanReceiver<TMsg> chan, Action<TMsg> defaultHandler) {
+      return ChanEvent.Listen(chan, defaultHandler);
+    }
+
     ///cross-wires 2 channels: returning 2 values through a merging function
     public static T FromChanCrossPair<T, TM, TL, TR>(Func<IChanReceiver<TM>, IChanSender<TM>, TL> fl,
                                                      Func<IChanReceiver<TM>, IChanSender<TM>, TR> fr,
@@ -25,9 +29,11 @@ namespace Chan
 
     public static async Task Pipe<TR, TS>(this IChanReceiver<TR> rchan, IChanSender<TS> schan,
                                           Func<TR,TS> fmap, bool propagateClose = true, Action<TR> tee = null) {
-      if (tee == null)
-        tee = x => {
-        };
+      if (fmap == null) throw new ArgumentNullException("fmap");
+      if (schan == null) throw new ArgumentNullException("schan");
+      if (rchan == null) throw new ArgumentNullException("rchan");
+      tee = tee ?? (x => {
+      });
       try {
         while (true)
           tee(await rchan.ReceiveAsync(v => schan.SendAsync(fmap(v))));
