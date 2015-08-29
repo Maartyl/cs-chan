@@ -6,9 +6,11 @@ Chan
 ## Chan idea
 Chans have two sides `IChanReceiver` and `IChanSender` with fairly obvious roles.
 
-What completion of `.Send` means can differ per type of chan, but basically accepted or rejected. In case of net-chans it can include exception why couldn't send.
+What completion of `.Send` means can differ per type of chan, but basically accepted or rejected. In case of net-chans it can include exception "why couldn't send".
 
 Completion of `.Receive` provieds with the message.
+
+Most of the internals (and thus API) are based on the Task monad.
 
 ### .Close
 All subsequent calls to `.Send` will return cancelled tasks and so will `.Receive` after emptying internal queues.
@@ -66,10 +68,37 @@ I originally didn't intend to create multiple versions. The original idea was fo
 
 Implemented version:
 
-The basic idea is binary TCP protocol. More details: [NetChan](NetChan).
+The basic idea is a binary TCP protocol. More details: [NetChan](NetChan).
 
+## Chan Factory
+
+Simple concept, that (generally) initialized with a chan allows to get senders and receivers. In case they are needed to be different objects, they can. (broadcast: special chan for every receiver)
 
 ## Chan Store
+While working with this library, most people will come in contact with this and IChan interfaces.
+This class works as a place, where chans are created and are accessed through.
+
+Basic idea is storing a number of Dictionaries. 
+
+Mainly `locals` where names point to ~tuples of local `ChanFactory` and possibly a server counter part for net-chans (in which case, they are cross-wired).
+
+Then there are `clients`, senders and receivers: These are clients connected to remote chans in some other `ChanStore`, potentially in another process, computer...
+
+- overview of instance variables
+    - `locals` - as mentioned; chans created in this ChanStore
+    - `clients` - chans created in some other ChanStore only referenced from here
+        - there are different caches: `clientReceivers` and `clientSenders`
+        - each cache record contains 1 connection wrapped in a ChanFactory
+    - `clientBindingsSender` and `clientBindingsReceiver`
+        - these are just default Binding for unconnected/future clients for WCF
+        - if not specified uses DefaultBinding that exists for the whole ChanStore
+    - `freeChans` - idea that I can 'free' chans after I am done using them.
+        - It turns out, it's not really necessary but it might be in the future.
+        - It is used for no longer sending anything in case of broadcast...
+        - this just a dict from each chan to an action, freeing it. - results in a bool, whether freed (also far from perfect...)
+    - `netChanProviderHost` is just the service host associated with this ChanStore
+    - `connectingServerTimeout` - after chan opened in server but no-one connected from outside for that long: cancel
+
 
 
 ## Chan Utils

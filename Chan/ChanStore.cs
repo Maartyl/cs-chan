@@ -236,10 +236,10 @@ namespace Chan
       lock (freeChans)
         freeChans[chan] = () => {
           var ret = f.Free(chan);
-          //if (ret) - FactoryWrap returns false always (which is not very good, but.... - change return type...?)
-          lock (freeChans)
-            freeChans.Remove(chan); //remove from non-freed (if got freed)
-          return ret; //free the chan;
+          if (ret)
+            lock (freeChans)
+              freeChans.Remove(chan); //remove from non-freed (if got freed or otherwise correct)
+          return ret; //correctly freed?;
         };
     }
 
@@ -357,7 +357,6 @@ namespace Chan
         freeClosers = freeChans.Values.ToList();
       foreach (var fv in freeClosers) //free everything
         fv(); //THOUGHT: what would something retuning false mean? - it's always the correct chan...
-      //^ it would mean it's probably just ChanWrapFactory...
 
       return Task.WhenAll(Combine(
         from l in locals

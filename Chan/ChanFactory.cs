@@ -131,8 +131,7 @@ namespace Chan
     }
 
     public override bool Free(IChanBase chan) {
-      //nothing
-      return false;
+      return chan == chanR || chan == chanS;
     }
 
     public override ChanDistributionType DistributionType { get { return ChanDistributionType.FirstOnly; } }
@@ -200,6 +199,8 @@ namespace Chan
     }
 
     public override bool Free(IChanBase chan) {
+      if (chan == chanS)
+        return true;
       Action<T> a;
       lock (receivers)
         if (receivers.TryGetValue(chan, out a)) {
