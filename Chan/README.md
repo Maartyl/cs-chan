@@ -62,7 +62,6 @@ Each ChanAsync contains 2 concurrent,blocking queues for following 2 scenarios:
     else:
         enqueue promise
 
-
 ## Net Chans
 I originally didn't intend to create multiple versions. The original idea was for .Send to return a task mainly to inform about exceptions while sending. After I extended the idea to completing when received, idea arose to complete when receivwed for net-chans too. It would probably take really long before completing, though. That version is not implemented.
 
