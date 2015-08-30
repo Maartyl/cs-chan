@@ -14,6 +14,7 @@ The first byte is opcode (what type of 'packet' it is).
 The rest are fields where meaning depends on the opcode.
 All values are stored in Big-endiand.
 
+Header details can be seen in [this table](https://docs.google.com/spreadsheets/d/194xfTzefP4BBAmkpHFahmH3JwOByksx5H1uvVMoljtk/pubhtml?gid=0&single=true).
 <iframe src="https://docs.google.com/spreadsheets/d/194xfTzefP4BBAmkpHFahmH3JwOByksx5H1uvVMoljtk/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
 
 Error is designed so, that all 0 is interpreted as Error 'packet' with no error message.
