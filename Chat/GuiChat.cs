@@ -245,7 +245,7 @@ Use tab for command completion.
 :server.stop
 :ip                      # get local IP address(es)
 :wsdl                    # open server with wsdl description of service to access chans
-:connect <host:port>     # default port is " + settings.DefaultServerPort + @"
+:connect <host:port>     # connect to a server; default port is " + settings.DefaultServerPort + @"
 :disconnect              # closes client
 :host <port>             # :server.start, :connect
 :join <host> <name>      # :connect <host>, :name <name>
@@ -253,7 +253,7 @@ Use tab for command completion.
 :down, :d                # scroll to end of message board
 :exit, :quit
 :help, :h                # show this help
-:send <msg>              # send msg as it is ; even just whitespace / nothing...
+:send <msg>              # send msg as it is; even just whitespace / nothing...
 :text <theText>          # ~= :send <trim($theText)> 
                          # wouldn't send nothing
 

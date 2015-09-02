@@ -6,7 +6,23 @@ A fairly simple chat using chans for actual connecting and sending of messages.
 
 For chat to work, clients must all connect to the same server.
 
+To start server, the `:server.start` is used. To this server then can different clients connect, including the one running in the same application(process) but not necessarily.
 
+One can connect to server through the `:connect` command.
+
+Server requires port to run on. Client then has to connect to that computer (ip address: obtainable thourh `:ip` command*) + has to specify the port used to start the server delimited by ':'.
+
+(* The ip command provides correct ip only if both computers are on the same network.)
+
+Example: 
+```
+#Server
+:server.start 4567
+:ip #-> 2.2.2.2
+
+#Client
+:connect 2.2.2.2:4567
+```
 
 
 ## UI Overview
