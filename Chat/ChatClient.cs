@@ -129,7 +129,7 @@ namespace Chat
         //inform: client connected
         BroadcastMessage(new Message(Message.MessageType.Connected, "".ArgSrc(ClientName))); 
 
-      } catch (EndpointNotFoundException ex) {
+      } catch (EndpointNotFoundException) {
         connector.RunError("no server found".ArgSrc("connect " + addr));
         #if DEBUG
         //ex.PipeEx(connector, "connect.notFound " + addr);
