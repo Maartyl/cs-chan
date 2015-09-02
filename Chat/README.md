@@ -48,7 +48,7 @@ missing arg: null
 everything else -> text, line
 ```
 
-Each ':' is a static property on Settings `UserCommandStart`. `text` is `Cmd.Text`.
+Each `':'` is a static property on Settings `UserCommandStart`. `text` is `Cmd.Text`.
 
 After invoking that in Connector, all `null` commands get translated to `Chat.NoCommand`.
 All `text` commands are either canceld in case it's just whitespace / ... or trim argument and are translated to `send` which is then handled by passing message to chans...
