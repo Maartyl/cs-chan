@@ -108,9 +108,9 @@ cs-chan is a normal .NET library.
 - Idea behind accessing through URI:
     - Normal code shouldn't even necessarily know what Uri it is using to access chans.
 - Net-chans are only accessible after calling `.StartServer(port)`.
-    - Get URIs then have to specify this port.
+    - Get URIs then have to specify this port in authority.
 
-## Example
+## Examples
 
 ### Chat Simple
 - in Chat/Program.cs
@@ -130,17 +130,17 @@ Details are in [/Chat](Chat) folder in this repository. It also includes very si
 This has been created as a school project but with the intention to also use it for other projects.
 
 ### Used Technologies
-    - Sockets
-        - My TCP protocol
-    - WCF
-    - Linq
-        - including Query syntax
-    - Tasks
-    - async methods
-        - The main part, Chan System, is based around async and Tasks.
-    - Reflection
-        - in generating default SerDes
-    - Serialization
+- Sockets
+    - My TCP protocol
+- WCF
+- Linq
+    - including Query syntax
+- Tasks
+- async methods
+    - The main part, Chan System, is based around async and Tasks.
+- Reflection
+    - in generating default SerDes
+- Serialization
     
     
     
