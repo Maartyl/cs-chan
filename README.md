@@ -68,6 +68,8 @@ Good but terrible idea is for .Send to return `Task<Task<TMsg>>`, where first ta
 
 Currently does not work through NAT as WCF request opens a TCP on some port and sends that to client to connect to it. This is obviously not good but I realized it too late: I will change it once I move opening channels to TCP as well (once I know how/if to solve authentication).
 
+#### Implementation Details
+See [Chan](Chan).
 
 ## Get
 
@@ -121,13 +123,6 @@ cs-chan is a normal .NET library.
 ### Chat
 Details are in [/Chat](Chat) folder in this repository. It also includes very simple, limited and synchronous version of Dispatch mentioned in [Outlook](#outlook) section.
 
-------------------------------
-
-# TODO
-
-- Basic idea how works from perspective of usage (WCF...)
-- Basic idea how works internally
-- API overview + internals overview
 
 
 ------------------------------
