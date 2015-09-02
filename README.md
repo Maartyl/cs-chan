@@ -118,7 +118,7 @@ cs-chan is a normal .NET library.
     - arg: port - starts server
     - arg: host:port - starts client
 - Only to show simple way to access chans and connect 2 computers.
-- All messages from server are broadcasted to everyone connected, they send everything to server and it does nothing else.
+- All messages from server are broadcasted to everyone connected, they send everything to server and it does nothing much else.
 
 ### Chat
 Details are in [/Chat](Chat) folder in this repository. It also includes very simple, limited and synchronous version of Dispatch mentioned in [Outlook](#outlook) section.

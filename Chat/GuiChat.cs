@@ -17,12 +17,12 @@ namespace Chat
     //originally: only run when needed to start server (the first time)
     // - didn't work well; now every server has it's own ChanStore (WCF reasons, mainly)
     //Unit so it can be used in Lazy
-    static Unit InitServer(ChanStore store, Connector conn) {
+    static Unit InitServer(Settings settings, ChanStore store, Connector conn) {
       //simple default config for now
       var dfltCfg = NetChanConfig.MakeDefault<Message>();
 
-      var bcFailT = store.CreateNetChan(Settings.ChanBroadcastName, dfltCfg, ChanDistributionType.Broadcast);
-      var bcUri = new Uri("chan:" + Settings.ChanBroadcastName);
+      var bcFailT = store.CreateNetChan(settings.ChanBroadcastName, dfltCfg, ChanDistributionType.Broadcast);
+      var bcUri = new Uri("chan:" + settings.ChanBroadcastName);
       var bcr = store.GetReceiver<Message>(bcUri);
       var bcs = store.GetSender<Message>(bcUri);
       var bcPipeT = bcr.Pipe(bcs); //connect server side of pipe: return back to everyone
@@ -83,7 +83,7 @@ namespace Chat
         //port OK: try creating and starting server:
         try {
           var serverStore = new ChanStore();
-          InitServer(serverStore, conn);
+          InitServer(settings, serverStore, conn);
           serverStore.StartServer(port);
 
           //created fine: reregister
@@ -254,7 +254,7 @@ Use tab for command completion.
 :exit, :quit
 :help, :h                # show this help
 :send <msg>              # send msg as it is ; even just whitespace / nothing...
-:text <theText>          # == :send <trim($theText) ?? cancel> 
+:text <theText>          # ~= :send <trim($theText)> 
                          # wouldn't send nothing
 
 if line doesn't start with ':': gets translated to: ':text <$line>'

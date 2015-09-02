@@ -114,7 +114,7 @@ namespace Chat
         //actually connect
         state = State.Connecting;
         try {
-          chans = await ConnectionChans.Connect(store, path);
+          chans = await ConnectionChans.Connect(settings, store, path);
           chans.MetaAddr = addr;
           cleanConnecting(State.Connected);
         } catch (Exception) {
@@ -252,8 +252,8 @@ namespace Chat
         return new ConnectionChans{ };
       }
 
-      public static async Task<ConnectionChans> Connect(ChanStore store, Func<string, Uri> p) {
-        var broadcast = p(Settings.ChanBroadcastName); //channel name
+      public static async Task<ConnectionChans> Connect(Settings settings, ChanStore store, Func<string, Uri> p) {
+        var broadcast = p(settings.ChanBroadcastName); //channel name
         var rT = store.GetReceiverAsync<Message>(broadcast);
         var sT = store.GetSenderAsync<Message>(broadcast);
         var k = Chan.Chan.Combine(await rT, await sT);

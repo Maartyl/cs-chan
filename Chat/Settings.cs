@@ -16,7 +16,7 @@ namespace Chat
 
     public string ClientDefaultName{ get { return "anon"; } }
 
-    public static string ChanBroadcastName { get { return "chat/broadcast"; } }
+    public string ChanBroadcastName { get { return "chat/broadcast"; } }
 
     public static char UserCommandStart{ get { return ':'; } }
   }
