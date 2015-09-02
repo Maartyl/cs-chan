@@ -24,6 +24,8 @@ Example:
 :connect 2.2.2.2:4567
 ```
 
+Use `:name <new name>` to change your name. Every client should do this to not confuse others with who wrote what.
+
 
 ## UI Overview
 {from (command) usage perspective}
