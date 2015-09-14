@@ -1,1 +1,20 @@
-﻿<Properties StartupItem="Chat/Chat.csproj" />
+﻿<Properties StartupItem="Chat/Chat.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Chat/GuiChat.cs">
+    <Files>
+      <File FileName="Chat/ChatClient.cs" Line="132" Column="41" />
+      <File FileName="Chat/Gui.cs" Line="52" Column="1" />
+      <File FileName="Chat/GuiChat.cs" Line="254" Column="11" />
+      <File FileName="Chat/Cmd.cs" Line="28" Column="5" />
+      <File FileName="Chat/Settings.cs" Line="18" Column="5" />
+      <File FileName="Chat/Dispatch.cs" Line="8" Column="29" />
+      <File FileName="Chat/Connector.cs" Line="15" Column="6" />
+      <File FileName="Chat/Program.cs" Line="18" Column="7" />
+      <File FileName="Chan/Properties/AssemblyInfo.cs" Line="17" Column="32" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

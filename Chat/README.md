@@ -53,7 +53,7 @@ Each `':'` is a static property on Settings `UserCommandStart`. `text` is `Cmd.T
 After invoking that in Connector, all `null` commands get translated to `Chat.NoCommand`.
 All `text` commands are either canceld in case it's just whitespace / ... or trim argument and are translated to `send` which is then handled by passing message to chans...
 
-For examples see `GuiChat.testParsing`. This method serves little purpose (and should be a proper test), but it is useful to see how command parsing works.
+For examples see `GuiChat.testParsing`. This method serves no real purpose, but it is useful to see how command parsing works.
 
 Commands in `Cmd` that start with ` #` are 'internal' and cannot be typed by user.
 ### Gui class
