@@ -117,6 +117,7 @@ Originally, there was a couple drafts of which 2 survived and one is implemented
 	-	They are structurally able of completing upon delivery but each send-task would take realy long to complete.
 	-	rejected
 -	ChanBlocking, and other implementation variants of ChanAsync
+	-	Rejected as drafts.
 
 ### ChanAsync implementation
 

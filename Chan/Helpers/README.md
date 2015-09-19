@@ -62,4 +62,4 @@ Provides extension method that normalizes loopback Uris so that they are equal. 
 Helpers
 -------
 
-Code not specific to project. It was written for it and is used in it but can be useful in other projects as well.
+Code not specific to project. It was written for it and is used in it but can be useful in other projects without modification.
