@@ -13,7 +13,7 @@ Simple static utility that counts how many times has code passed through certain
 
 ### Unit.cs
 
-A class that represents 'nothing' and only has 1 possible value: null. It's like void but can be used in generics.
+A class that represents 'nothing' and only has 1 possible value: null. It's like void, in a sense, but can be used in generics.
 
 ### Exts.cs
 
@@ -58,3 +58,8 @@ static Property with pre-made canceled Task.
 ### UriHelpers.cs
 
 Provides extension method that normalizes loopback Uris so that they are equal. (for a hash map, for example)
+
+Helpers
+-------
+
+Code not specific to project. It was written for it and is used in it but can be useful in other projects as well.
