@@ -12,7 +12,7 @@ Class to group and allow access to a number of chans. Has methods that create an
 
 #### class `Chan`
 
-Helper static methods for manipulating chans. See (Utils)[#chan-utils]
+Helper static methods for manipulating chans. See [Utils](#chan-utils)
 
 ### `IChanBase.cs`
 
