@@ -6,7 +6,7 @@ Overview of code
 
 ### `ChanStore.cs`
 
-Class to group and allow access to a number of chans. Has methods that create and register chans in the store and methods to retrieve them, based on uri provided in creation.
+Class to group and allow access to a number of chans. Has methods that create and register chans in the store and methods to retrieve them, based on uri provided in creation. Uses and hides infrastructure and differences in chans and their creation.
 
 ### `Chan.cs`
 

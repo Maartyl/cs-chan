@@ -54,15 +54,18 @@ Chans are generic, one-directional asynchronous channels between (possibly) mult
 
 ### Motivation
 
-(subjective) - I worked on a project that was about passing data around, essentially. - I realized: this seems like something people do all the time. - The project used WCF and it wasn't very well suited for the task: - no push (that was the main problem) - specifying a lot of details not necessary for something simple - many things specific to this one problem that could be generic (statically typed method signatures) - ...
+(subjective)
 
+-	I worked on a project that was about passing data around, essentially.
+	-	I realized: this seems like something people do all the time.
+	-	The project used WCF and it wasn't very well suited for the task:
+		-	no push (that was the main problem)
+		-	specifying a lot of details not necessary for something simple
+		-	many things specific to this one problem that could be generic (statically typed method signatures) - ...
 -	I thought about using TCP but it seemed like way too much work then.
 -	So, I wanted to create simple system that allows sending messages between subsystems over network.
-
 	-	It wasn't that hard to extend it to local systems.
-
 -	I looked around: I never really saw such library anywhere and thought it would be cool.
-
 -	I needed something for a school project and this seemed both interesting and useful.
 
 ### Outlook
@@ -78,6 +81,10 @@ Chans would then connect more local and more reactive parts built around Dispatc
 Good but terrible idea is for .Send to return `Task<Task<TMsg>>`, where first task completes upon properly sending/enqueuing/... and second after received with possible reply or Exception thrown in receiver. - Which has many complications like: multiple receivers, possibly passing Exceptions around on the internet, ...
 
 Currently does not work through NAT as WCF request opens a TCP on some port and sends that to client to connect to it. This is obviously not good but I realized it too late: I will change it once I move opening channels to TCP as well (once I know how/if to solve authentication).
+
+### Chan System Overview Diagram
+
+\{...ADD LINK\}
 
 ### Implementation Details
 
@@ -120,7 +127,7 @@ Getting Started
 -	access the chans through `.Get{Sender,Receiver}{,Async}(uri)`
 
 	-	where uri is: `chan:[//<authority*>]/<chan name>`
-	-	: If accessing 'outside' end of a net-chan.
+	-	* : If accessing 'outside' end of a net-chan.
 
 -	Receivers then receive what counterparts on the same chan sent.
 
