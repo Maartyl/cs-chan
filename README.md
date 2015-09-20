@@ -84,7 +84,9 @@ Currently does not work through NAT as WCF request opens a TCP on some port and 
 
 ### Chan System Overview Diagram
 
-\{...ADD LINK\}
+[Diagram](Chan/chanArchitecture.png) showing structure behind `ChanStore` api.
+
+![Diagram](Chan/chanArchitecture.png)
 
 ### Implementation Details
 
