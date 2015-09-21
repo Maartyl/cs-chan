@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Chan System</title>
+
+		<meta name="description" content="Asynchronous channels for connecting subsystems">
+		<meta name="author" content="Martin Chmelík">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<style>
+		.reveal em {
+			color: lightgreen;
+		}
+		.reveal strong {
+			color: pink;
+		}
+		</style>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+		<div class="reveal">
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Chan System</h1>
+					<h3><small>Asynchronous channels for connecting subsystems</small></h3>
+					<p>
+						<small>Created by <a href="https://github.com/Maartyl">Martin Chmelík</a></small>
+					</p>
+				</section>
+
+				<section data-markdown>
+					<script type="text/template">
+					## //TODO
+					<small>
+					- Chan
+
+					- Chat
+						- idea
+						- cmds / ui
+						- Connector
+					- known problems
+					- summary
+					</small>
+					</script>
+				</section>
+
+				<section data-markdown>
+					## overview
+
+					- Chan
+						- idea
+						- chan store
+						- detail
+						- net chans
+					- Chat (application example)
+						- idea
+						- UI and commands
+						- Connector
+				</section>
+
+				<section>
+					<!-- idea -->
+					<section data-markdown>
+						## chan idea
+
+						- connect *independent susbsystems*
+							- susbystems require only:
+								- name and location of channel
+								- to reference Chan.dll
+						- *constant API* for any 'distance':
+							- same process
+							- different process
+							- different computer
+						- sending *immutable messages* over 'channels' (chans)
+							- chan is abstraction of *asynchronous queue*
+					</section>
+
+					<section data-markdown>
+						## motivation
+
+						- breaking dependency, ...
+						- many small apps need to exchange messages between remote components
+						- personal need for such framework
+							- I haven't found any library matching my idea.
+							<!-- - <small>(project: collecting and 'sorting' problem logs from warehouse and moving it to people at office)</small> -->
+						- something many people could find useful
+						- interesting learning experience
+					</section>
+				</section>
+
+				<section>
+					<!-- chan system overview  -->
+					<section data-markdown>
+						## chan system overview
+
+						Most logic is hidden behind *ChanStore* with simple API.
+						- *create net/local chan*
+						- *access sender/receiver* (ends of a chan)
+							- If provides host and port can access net-chan created in differnt ChanStore.
+								- That ChanStore has to start a server on that port.
+						- uses URIs as chan identifiers
+					</section>
+
+					<section data-markdown>
+						## chan identification
+
+						Chans are accessed with URIs with 'chan' scheme.
+
+						- *no authority*: local chan (or local end of net chan)
+							```javascript
+							"chan:ui/events" //example
+							```
+						- *with authority*: remote end of net-chan
+							```javascript
+							"chan://myserver.cz:6789/chat/messages" //example
+							```
+					</section>
+
+					<section data-background="https://github.com/Maartyl/cs-chan/raw/master/Chan/chanArchitecture.png">
+					</section>
+				</section>
+
+				<section>
+					<!-- details -->
+					<section data-markdown>
+						## chan details
+
+						Ideas behind implementing chans and ChanStore.
+					</section>
+
+					<section data-markdown>
+						## chan types
+
+						- *async local*
+							- internally stores *2 queues of 'promises'*
+								- [waiting for send] and [waiting for receive]
+							- queues are limited in legth, after which they block the thread
+						- *net*
+							- Serializes and sends messages over *TCP* connection.
+						- other
+							- implementing other would not require any change of the rest of the system
+							- possible fake: cancelled; timeout....
+					</section>
+
+					<section data-markdown>
+						## chan factory
+
+						- Factories differ per *distribution type*
+							- *FirstOnly* - each single chan works like this - 'evenly' distributes messages between all receivers
+							- *Broadcast* - each receiver receives all messages (simulated by creating different chans in a factory)
+						- Behaves like a factory but does not create a chan every time.
+						- Distribution type can be specified when creating the chan in
+						  ChanStore and defaults to FirstOnly (which adds almost no overhead)
+					</section>
+
+					<section data-markdown>
+						## `SerDes`
+
+						Refers to `ISerDes&lt;T&gt;`
+
+						Typesafe serialization, deserialization interface
+
+						Default SerDes is provided in NetChanConfig for `[Serializable]` types.
+					</section>
+
+					<section data-markdown>
+						## chan store
+
+						- stores dictionaries
+						- *locals*
+							- maps URIs to 'tuples' of factory and server (null for local chans)
+						- *clients to remote chans*
+							- maps message-types to caches
+								- cache maps URIs to factories
+							- caches must be *initialized* with mainly SerDes
+								- Required for default SerDes too: returns task that fails if any exception happens in cache.
+							- *Different for senders and receivers* for they are unrelated.
+					</section>
+				</section>
+
+				<section>
+					<!-- net chan -->
+					<section data-markdown>
+						## net chan
+
+						Sends messages over *custom binary TCP protocol* that can send messages of up to *64KiB* (when serialized).
+
+						The protocol is designed to be able to send fragmented messages of up to 4GiB but that is not implemented and using it would probably signal bad design anyway...
+					</section>
+
+					<section data-markdown>
+						## net chan protocol
+
+						Each end sends 'packets' that consist of a *header* (8 bytes) and possibly *data*. Header always contains length of data (in 2 bytes) if there are any.
+
+						All values are represented in big-endiand.
+
+						There are different types of headers, like `MSG`, `PING`, `CLOSE` ...
+
+						For complete list and details see [documentation](https://github.com/Maartyl/cs-chan/tree/master/Chan/NetChan#protocol).
+					</section>
+				</section>
+
+				<!-- chat -->
+				<section>
+					<section data-markdown>
+						# Chat
+						##### application example
+					</section>
+
+					<section data-markdown>
+						Simple chat aplication that uses *chans for communication* and shows *connector* idea.
+					</section>
+				</section>
+
+				<section>
+					<section data-markdown>
+						## chat idea
+					</section>
+				</section>
+
+
+				<section>
+					<section data-markdown>
+						## connector
+					</section>
+				</section>
+
+				<section>
+					<section data-markdown>
+						## known problems
+					</section>
+				</section>
+
+				<section>
+					<section data-markdown>
+						## summary
+					</section>
+				</section>
+
+				<section data-markdown>
+					# Thank you
+
+					If you liked this presentation and want to know more here is project's [GitHub page](https://github.com/Maartyl/cs-chan) and [documentation](https://github.com/Maartyl/cs-chan#chan-system).
+
+					More from me can can found on my [GitHub profile](https://github.com/Maartyl).
+				</section>
+
+<!--
+				<section data-markdown>
+					<script type="text/template">
+						## {template 1}
+					</script>
+				</section>
+
+				<section data-markdown>
+					## {template 2}
+				</section>
+
+				<section>
+					<section data-markdown>
+						## {template 3}
+					</section>
+				</section>
+ -->
+
+<!-- ESC (overview) and alt+click (zoom)-->
+
+
+<!-- match condition to use syntax highlight  -->
+<pre style="display:none;"><code data-trim></code></pre>
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
