@@ -58,7 +58,6 @@
 					<script type="text/template">
 					## //TODO
 					<small>
-					- Chan
 
 					- Chat
 						- idea
@@ -236,12 +235,41 @@
 
 					<section data-markdown>
 						Simple chat aplication that uses *chans for communication* and shows *connector* idea.
+						![screenshot](https://raw.githubusercontent.com/Maartyl/cs-chan/master/Chat/screenshot.png)
 					</section>
 				</section>
 
 				<section>
 					<section data-markdown>
 						## chat idea
+
+						- looks and works like terminal application
+						- as little code as possible should depend on GUI
+							- so it can be easily replaced
+						- user can issue *commands* (like IRC)
+					</section>
+
+					<section data-markdown>
+						## chat ui
+
+						- UI consist simply of
+							- *command bar* at the bottom of the window
+							- *text area* which shows messages, errors and notifications
+								- can be swapped with *help area* which shows help
+								- application starts in help mode
+					</section>
+
+					<section data-markdown>
+						## chat commands
+
+						All commands start with ':'
+
+						Any line not starting with ':' is interpreted as *:text* command with rest as argument.
+						If line wasn't just whitespace, it is trimmed and fed into *:send*.
+
+						All that (and any other input) is part of command *CmdParseRun* which
+						hides all logic and lets any part of code run the same command as user.
+						It is used to *run command line arguments*.
 					</section>
 				</section>
 
@@ -255,12 +283,34 @@
 				<section>
 					<section data-markdown>
 						## known problems
+						(1)
+					</section>
+
+					<section data-markdown>
+						## server cannot be behind NAT
+
+						- **problem**
+							- upon request server creates TCP listener at random port and sends that port to client
+							- does not get NAT translated
+						- *solution*
+							- single TCP listender instead of WCF call.
+								- which chan to use is determined during handshake
+							- big change
+							- WCF can do authentication and I don't know how to write it properly with just TCP.
+								- I will fix it once I understand the problematic.
 					</section>
 				</section>
 
 				<section>
 					<section data-markdown>
 						## summary
+
+						- chans *connect independent* subsystems
+						- chans are created in and accessed through *ChanStore*
+						- net-chan uses *lasting TCP* connection to push messages
+						- chat uses dispatch on strings (commands) to run actions
+						---
+						- currently **does not work over NAT**
 					</section>
 				</section>
 
@@ -293,8 +343,8 @@
 <!-- ESC (overview) and alt+click (zoom)-->
 
 
-<!-- match condition to use syntax highlight  -->
-<pre style="display:none;"><code data-trim></code></pre>
+				<!-- match condition to use syntax highlight  -->
+				<pre style="display:none;"><code data-trim></code></pre>
 
 			</div>
 		</div>
