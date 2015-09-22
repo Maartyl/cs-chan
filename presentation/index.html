@@ -55,21 +55,6 @@
 				</section>
 
 				<section data-markdown>
-					<script type="text/template">
-					## //TODO
-					<small>
-
-					- Chat
-						- idea
-						- cmds / ui
-						- Connector
-					- known problems
-					- summary
-					</small>
-					</script>
-				</section>
-
-				<section data-markdown>
 					## overview
 
 					- Chan
@@ -277,6 +262,25 @@
 				<section>
 					<section data-markdown>
 						## connector
+
+						Implemented version is essentialy just *dynamic dispatch* on some key type;
+						in case of Chat, string.
+
+						The full version idea is closer to an asynchronous actor system
+						with asynchronous replies and message sending
+						that can be extended by chans to span processes.
+
+						Maybe using some actual actor library might be better.
+
+						Mentioned because if I ever really use chans in practice,
+						I would like to use it with such system or at least something with
+						dynamic dispatch and asynchronous replies.
+					</section>
+
+					<section data-markdown>
+						## connector in chat
+
+
 					</section>
 				</section>
 
