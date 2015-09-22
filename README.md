@@ -1,7 +1,9 @@
 Chan System
 ===========
 
-Library for sending messages between unrelated subsystems or parts of application possibly over an internet.
+Library for sending messages between unrelated subsystems or parts of application possibly over a network.
+
+Senders and receivers per chan can be accessed from other computers to transfer messages simply by calling `.Send(T msg)` and `Task<T> .Receive()`. Messages are serialized and sent over TCP connection. Not all chans have to be network accessible, in which case they are much faster and messages don't need to be serializable. Application components don't need to know how are messages actually transported, which adds scalability and independence between components.
 
 About
 -----
